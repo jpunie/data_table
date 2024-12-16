@@ -137,6 +137,12 @@ defmodule DataTable do
     """
   )
 
+  attr(:filter_enabled, :boolean,
+    default: true,
+    doc: """
+    """
+  )
+
   attr(:always_columns, :list,
     doc: """
     A list of column ids that will always be loaded.

@@ -102,6 +102,7 @@ defmodule DataTable.Theme.Tailwind do
     ~H"""
     <div>
       <.filter_header
+        :if={@filter_enabled}
         filters_form={@filters_form}
         can_select={@static.can_select}
         has_selection={@has_selection}
@@ -111,6 +112,8 @@ defmodule DataTable.Theme.Tailwind do
         filter_column_order={@static.filter_column_order}
         filter_columns={@static.filter_columns}
         filters_fields={@static.filters_fields}/>
+     <div :if={!@filter_enabled} class="sm:flex sm:justify-between mt-14"
+     />
 
       <div class="flex flex-col">
         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
