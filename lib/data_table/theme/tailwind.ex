@@ -13,12 +13,15 @@ defmodule DataTable.Theme.Tailwind do
 
   # If using this module as the base for your own theme, you may wish to use the
   # upstream libraries instead of these vendored versions.
-  alias DataTable.Theme.Tailwind.Heroicons # From `:heroicons` Heroicons
-  alias DataTable.Theme.Tailwind.Dropdown # From `:petal_components` PetalComponents.Dropdown`
+  # From `:heroicons` Heroicons
+  alias DataTable.Theme.Tailwind.Heroicons
+  # From `:petal_components` PetalComponents.Dropdown`
+  alias DataTable.Theme.Tailwind.Dropdown
 
-  attr :size, :atom, default: :small, values: [:small, :medium, :large]
-  slot :icon
-  slot :inner_block, required: true
+  attr(:size, :atom, default: :small, values: [:small, :medium, :large])
+  slot(:icon)
+  slot(:inner_block, required: true)
+
   def btn_basic(assigns) do
     ~H"""
     <% classes = [
@@ -40,7 +43,8 @@ defmodule DataTable.Theme.Tailwind do
     """
   end
 
-  slot :inner_block, required: true
+  slot(:inner_block, required: true)
+
   def btn_icon(assigns) do
     ~H"""
     <div tabindex="0" class={[
@@ -55,8 +59,9 @@ defmodule DataTable.Theme.Tailwind do
     """
   end
 
-  attr :field, Phoenix.HTML.FormField
-  attr :options, :any
+  attr(:field, Phoenix.HTML.FormField)
+  attr(:options, :any)
+
   def select(assigns) do
     ~H"""
     <select
@@ -74,7 +79,8 @@ defmodule DataTable.Theme.Tailwind do
     """
   end
 
-  attr :field, Phoenix.HTML.FormField
+  attr(:field, Phoenix.HTML.FormField)
+
   def text_input(assigns) do
     ~H"""
     <% has_error = @field.errors != [] %>
@@ -182,8 +188,8 @@ defmodule DataTable.Theme.Tailwind do
 
   def table_header(assigns) do
     ~H"""
-    <thead class="bg-gray-50">
-      <tr class="divide-x divide-gray-200">
+    <thead>
+      <tr>
         <th :if={@can_select} scope="col" class="w-10 pl-4 !border-0">
           <.checkbox state={@header_selection} on_toggle="toggle-all" phx-target={@target}/>
         </th>
@@ -193,7 +199,10 @@ defmodule DataTable.Theme.Tailwind do
         <th
             :for={{field, idx} <- Enum.with_index(@header_fields)}
             scope="col"
-            class={["py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6", (if idx == 0, do: "!border-0")]}>
+            class={[
+              "whitespace-nowrap px-6 py-3 text-xs font-medium tracking-wider text-left uppercase text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300",
+              (if idx == 0, do: "!border-0")
+              ]}>
           <div class="flex items-center justify-between">
             <a :if={not field.can_sort} class="group inline-flex">
               <%= field.name %>
@@ -221,7 +230,7 @@ defmodule DataTable.Theme.Tailwind do
           </div>
         </th>
 
-        <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 w-0 whitespace-nowrap !border-0">
+        <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 w-0 whitespace-nowrap !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
           <span class="sr-only">Buttons</span>
           <div class="flex justify-end content-center">
             <Dropdown.dropdown>
@@ -229,15 +238,15 @@ defmodule DataTable.Theme.Tailwind do
                 <Heroicons.list_bullet mini class="h-4 w-4"/>
               </:trigger_element>
 
-              <div class="p-4 bg-white top-4 right-0 rounded space-y-2">
+              <div class="p-4 top-4 right-0 rounded space-y-2">
                 <div :for={{name, id, checked} <- @togglable_fields} class="relative flex items-start cursor-pointer" phx-click="toggle-field" phx-target={@target} phx-value-field={id}>
                   <div class="flex h-5 w-5 items-center">
                     <div class="border border-gray-300 rounded relative w-[18px] h-[18px]">
-                      <Heroicons.check :if={checked} solid={true} class="w-4 text-gray-800"/>
+                      <Heroicons.check :if={checked} solid={true} class="w-4"/>
                     </div>
                   </div>
                   <div class="ml-2 text-sm">
-                    <label for="comments" class="font-medium text-gray-700"><%= name %></label>
+                    <label for="comments" class="font-medium"><%= name %></label>
                   </div>
                 </div>
               </div>
@@ -251,9 +260,9 @@ defmodule DataTable.Theme.Tailwind do
 
   def table_body(assigns) do
     ~H"""
-    <tbody class="bg-white">
+    <tbody>
       <%= for row <- @rows do %>
-        <tr class="border-t border-gray-200 hover:bg-gray-50 divide-x divide-gray-200">
+        <tr class="bg-white border-b dark:border-gray-700 dark:bg-gray-800 last:border-none;">
           <td :if={@can_select} class="pl-4 !border-0">
             <.checkbox state={row.selected} on_toggle="toggle-row" phx-target={@target} phx-value-id={row.id}/>
           </td>
@@ -266,7 +275,7 @@ defmodule DataTable.Theme.Tailwind do
 
           <td
               :for={{field_slot, idx} <- Enum.with_index(@field_slots)}
-              class={["whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6", (if idx == 0, do: "!border-0")]}>
+              class={["px-6 py-4 text-sm text-gray-500 dark:text-gray-400", field_slot[:class] || "", (if idx == 0, do: "!border-0")]}>
             <%= render_slot(field_slot, row.data) %>
           </td>
 
@@ -277,7 +286,7 @@ defmodule DataTable.Theme.Tailwind do
           </td>
         </tr>
 
-        <tr :if={row.expanded}>
+        <tr :if={row.expanded} class="bg-white border-b dark:border-gray-700 dark:bg-gray-800 last:border-none;">
           <td colspan="50">
             <%= render_slot(@row_expanded_slot, row.data) %>
           </td>
@@ -289,12 +298,12 @@ defmodule DataTable.Theme.Tailwind do
 
   def table_footer(assigns) do
     ~H"""
-    <tfoot class="bg-gray-50">
-      <tr>
+    <tfoot>
+      <tr class="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
         <td colspan="20" class="py-2 px-4">
           <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p class="text-sm text-gray-700">
+              <p class="text-sm ">
                 Showing
                 <span class="font-medium"><%= @page_start_item %></span>
                 to
@@ -307,11 +316,11 @@ defmodule DataTable.Theme.Tailwind do
             <div>
               <% pages = Util.generate_pages(@page, @page_size, @total_results) %>
               <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                <a :if={@has_prev} phx-click="change-page" phx-target={@target} phx-value-page={@page - 1} class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 hover:cursor-pointer focus:z-20">
+                <a :if={@has_prev} phx-click="change-page" phx-target={@target} phx-value-page={@page - 1} class="inline-flex items-center justify-center rounded-l-md leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-400">
                   <span class="sr-only">Previous</span>
                   <Heroicons.chevron_left mini={true} class="h-5 w-5"/>
                 </a>
-                <a :if={not @has_prev} class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500">
+                <a :if={not @has_prev} class="inline-flex items-center justify-center rounded-l-md leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
                   <span class="sr-only">Previous</span>
                   <Heroicons.chevron_left mini={true} class="h-5 w-5"/>
                 </a>
@@ -322,20 +331,19 @@ defmodule DataTable.Theme.Tailwind do
                   phx-target={@target}
                   phx-value-page={page_num}
                   class={[
-                    "relative inline-flex items-center border px-4 py-2 text-sm font-medium hover:cursor-pointer focus:z-20",
                     (
-                      if current, do: "z-20 border-indigo-500 bg-indigo-50 text-indigo-600",
-                        else: "z-10 border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                      if current, do: "inline-flex items-center justify-center leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+                        else: "inline-flex items-center justify-center leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-400"
                     )
                   ]}>
                   <%= page_num + 1 %>
                 </a>
 
-                <a :if={@has_next} phx-click="change-page" phx-target={@target} phx-value-page={@page + 1} class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 hover:cursor-pointer focus:z-20">
+                <a :if={@has_next} phx-click="change-page" phx-target={@target} phx-value-page={@page + 1} class="inline-flex items-center justify-center rounded-r-md leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-400">
                   <span class="sr-only">Next</span>
                   <Heroicons.chevron_right mini={true} class="h-5 w-5"/>
                 </a>
-                <a :if={not @has_next} class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500">
+                <a :if={not @has_next} class="inline-flex items-center justify-center rounded-r-md leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
                   <span class="sr-only">Next</span>
                   <Heroicons.chevron_right mini={true} class="h-5 w-5"/>
                 </a>
@@ -348,8 +356,8 @@ defmodule DataTable.Theme.Tailwind do
     """
   end
 
-  #defp op_options_and_default(_spec, nil), do: {[], ""}
-  #defp op_options_and_default(spec, field_value) do
+  # defp op_options_and_default(_spec, nil), do: {[], ""}
+  # defp op_options_and_default(spec, field_value) do
   #  atom_field = String.to_existing_atom(field_value)
   #  filter_data = Enum.find(spec.filterable_columns, & &1.col_id == atom_field)
 
@@ -367,22 +375,22 @@ defmodule DataTable.Theme.Tailwind do
 
   #    {kvs, default_selected}
   #  end
-  #end
+  # end
 
+  # attr :form, :any
+  # attr :target, :any
+  # attr :spec, :any
 
-  #attr :form, :any
-  #attr :target, :any
-  #attr :spec, :any
+  # attr :filters_fields, :any
+  # attr :filterable_fields, :any
 
-  #attr :filters_fields, :any
-  #attr :filterable_fields, :any
+  attr(:target, :any)
+  attr(:filters_form, :any)
+  attr(:filter_column_order, :any)
+  attr(:filter_columns, :any)
+  attr(:filters_fields, :any)
+  attr(:update_filters, :any)
 
-  attr :target, :any
-  attr :filters_form, :any
-  attr :filter_column_order, :any
-  attr :filter_columns, :any
-  attr :filters_fields, :any
-  attr :update_filters, :any
   def filters_form(assigns) do
     ~H"""
     <.form for={@filters_form} phx-target={@target} phx-change="filters-change" phx-submit="filters-change" class="py-3 sm:flex items-start">
@@ -445,5 +453,4 @@ defmodule DataTable.Theme.Tailwind do
     </.form>
     """
   end
-
 end
