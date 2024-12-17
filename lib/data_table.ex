@@ -143,6 +143,8 @@ defmodule DataTable do
     """
   )
 
+  attr(:gettext, :atom, default: nil, required: false)
+
   attr(:always_columns, :list,
     doc: """
     A list of column ids that will always be loaded.

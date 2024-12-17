@@ -140,6 +140,7 @@ defmodule DataTable.Theme.Tailwind do
                   target={@target}/>
 
                 <.table_footer
+                  gettext={@gettext}
                   page_start_item={@page_start_item}
                   page_end_item={@page_end_item}
                   total_results={@total_results}
@@ -299,6 +300,14 @@ defmodule DataTable.Theme.Tailwind do
     """
   end
 
+  def gettext(nil, key) do
+    key
+  end
+
+  def gettext(gettext, key) do
+    Gettext.gettext(gettext, key)
+  end
+
   def table_footer(assigns) do
     ~H"""
     <tfoot>
@@ -307,13 +316,12 @@ defmodule DataTable.Theme.Tailwind do
           <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
               <p class="text-sm ">
-                Showing
-                <span class="font-medium"><%= @page_start_item %></span>
-                to
+                <%= gettext(@gettext, "Showing") %>
+                <span class="font-medium"><%= @page_start_item + 1 %></span>
+                <%= gettext(@gettext, "to") %>
                 <span class="font-medium"><%= @page_end_item %></span>
-                of
+                <%= gettext(@gettext, "of") %>
                 <span class="font-medium"><%= @total_results %></span>
-                results
               </p>
             </div>
             <div>

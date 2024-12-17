@@ -347,6 +347,7 @@ defmodule DataTable.LiveComponent do
         socket
         |> assign(%{
           id: assigns.id,
+          gettext: assigns[:gettext],
           filter_enabled: assigns[:filter_enabled],
           filters_changeset: filters_changeset,
           filters: filters,
