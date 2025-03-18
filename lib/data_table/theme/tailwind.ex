@@ -317,7 +317,8 @@ defmodule DataTable.Theme.Tailwind do
             <div>
               <p class="text-sm ">
                 <%= gettext(@gettext, "Showing") %>
-                <span class="font-medium"><%= @page_start_item + 1 %></span>
+                <span :if={@total_results == 0} class="font-medium">0</span>
+                <span :if={@total_results > 0} class="font-medium"><%= @page_start_item + 1 %></span>
                 <%= gettext(@gettext, "to") %>
                 <span class="font-medium"><%= @page_end_item %></span>
                 <%= gettext(@gettext, "of") %>
