@@ -69,8 +69,8 @@ defmodule DataTable.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix, "~> 1.7"},
-      {:phoenix_live_view, "~> 0.20"},
+      {:phoenix, "~> 1.7.0", override: true},
+      {:phoenix_live_view, "~> 1.0"},
       {:phoenix_ecto, "~> 4.6"},
       {:ecto, "~> 3.12"},
       {:gettext, "~> 0.20"},
