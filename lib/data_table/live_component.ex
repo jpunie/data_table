@@ -594,7 +594,7 @@ defmodule DataTable.LiveComponent do
     assigns = socket.assigns
 
     socket =
-      if MapSet.member?(nav.set, :filters) do
+      if MapSet.member?(nav.set, :filters) && !Enum.empty?(nav.filters) do
         changes = %{
           "filters" =>
             nav.filters
