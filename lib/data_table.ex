@@ -154,7 +154,11 @@ defmodule DataTable do
   slot :col, doc: "One `:col` should be sepecified for each potential column in the table" do
     attr(:name, :string,
       required: true,
-      doc: "Name in column header. Must be unique"
+      doc: "Column name, must be unique"
+    )
+
+    attr(:label, :string,
+      doc: "Label used as column header, defaults to attribute `name`"
     )
 
     # default: true

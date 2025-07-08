@@ -88,7 +88,6 @@ defmodule DataTable.LiveComponent do
       |> Enum.map(fn %{label: label, handle_action: action} -> {label, action} end)
       |> Enum.with_index()
 
-    filterable_columns = DataTable.Source.filterable_fields(source)
     filter_types = DataTable.Source.filter_types(source)
     id_field = DataTable.Source.key(source)
 
@@ -96,15 +95,47 @@ defmodule DataTable.LiveComponent do
       comp_assigns.col
       |> Enum.map(fn slot = %{__slot__: :col, fields: fields, name: name} ->
         %{
-          id: name,
+          id: String.downcase(name),
           name: name,
+          label: Map.get(slot, :label, name),
           columns: fields,
           slot: slot,
+          visible: Map.get(slot, :visible, true),
           sort_field: Map.get(slot, :sort_field),
           filter_field: Map.get(slot, :filter_field),
           filter_field_op: Map.get(slot, :filter_field_op)
         }
       end)
+
+    fields_by_str_id =
+      fields
+        |> Enum.map(fn
+          %{id: id, name: name} when is_atom(id) -> {Atom.to_string(id), name}
+          %{id: id, name: name} when is_binary(id) -> {id, name}
+        end)
+        |> Enum.into(%{})
+
+    fields_by_id =
+      fields
+        |> Enum.map(&{&1.id, &1})
+        |> Enum.into(%{})
+
+
+    filterable_columns = DataTable.Source.filterable_fields(source)
+    |> Enum.map(fn %{col_id: col_id, type: type} ->
+      %{
+        col_id: col_id,
+        type: type,
+        name: Map.fetch!(fields_by_id, Atom.to_string(col_id)).name,
+        label: Map.fetch!(fields_by_id, Atom.to_string(col_id)).label
+      }
+    end)
+    |> List.insert_at(0, %{
+        col_id: :all,
+        type: :all,
+        name: "All",
+        label: DataTable.Gettext.gettext(comp_assigns.gettext, "All")
+      })
 
     static = %{
       theme: comp_assigns.theme,
@@ -127,23 +158,16 @@ defmodule DataTable.LiveComponent do
       fields: fields,
       id_field: id_field,
       default_shown_fields:
-        comp_assigns.col
+        fields
         |> Enum.map(fn
           %{visible: false} -> []
-          %{name: name} -> [name]
+          %{id: id} -> [id]
         end)
         |> Enum.concat(),
       field_id_by_str_id:
-        fields
-        |> Enum.map(fn
-          %{id: id} when is_atom(id) -> {Atom.to_string(id), id}
-          %{id: id} when is_binary(id) -> {id, id}
-        end)
-        |> Enum.into(%{}),
+        fields_by_str_id,
       field_by_id:
-        fields
-        |> Enum.map(&{&1.id, &1})
-        |> Enum.into(%{}),
+        fields_by_id,
       always_columns:
         comp_assigns.row_buttons
         |> Enum.map(fn rb -> Map.get(rb, :fields, []) end)
@@ -164,39 +188,64 @@ defmodule DataTable.LiveComponent do
           Atom.to_string(data.col_id)
         end),
       filter_columns:
-        Enum.into(
-          Enum.map(filterable_columns, fn data ->
-            id_str = Atom.to_string(data.col_id)
+      filterable_columns
+      |> Enum.map(fn data ->
+          id_str = Atom.to_string(data.col_id)
 
-            out = %{
-              id: id_str,
-              name: id_str,
-              type_name: data.type,
-              validate: filter_types[data.type].validate,
-              ops_order:
-                Enum.map(filter_types[data.type].ops, fn {id, _name} ->
-                  Atom.to_string(id)
+          out = %{
+            id: id_str,
+            name: data.name,
+            label: data.label,
+            type_name: data.type,
+            validate: filter_types[data.type].validate,
+            ops_order:
+              Enum.map(filter_types[data.type].ops, fn {id, _name} ->
+                Atom.to_string(id)
+              end),
+            ops:
+              Enum.into(
+                Enum.map(filter_types[data.type].ops, fn {id, name} ->
+                  id_str = Atom.to_string(id)
+
+                  out = %{
+                    id: id_str,
+                    name: name
+                  }
+
+                  {id_str, out}
                 end),
-              ops:
-                Enum.into(
-                  Enum.map(filter_types[data.type].ops, fn {id, name} ->
-                    id_str = Atom.to_string(id)
+                %{}
+              )
+          }
 
-                    out = %{
-                      id: id_str,
-                      name: name
-                    }
+          {id_str, out}
+        end)
+        |> Enum.into(%{})
+        |> Map.merge(%{"all" => %{
+            id: "all",
+            name: "All",
+            label: DataTable.Gettext.gettext(comp_assigns.gettext, "All"),
+            type_name: :all,
+            validate: filter_types[:all].validate,
+            ops_order:
+              Enum.map(filter_types[:all].ops, fn {id, _name} ->
+                Atom.to_string(id)
+              end),
+            ops:
+              Enum.into(
+                Enum.map(filter_types[:all].ops, fn {id, name} ->
+                  id_str = Atom.to_string(id)
 
-                    {id_str, out}
-                  end),
-                  %{}
-                )
-            }
+                  out = %{
+                    id: id_str,
+                    name: name
+                  }
 
-            {id_str, out}
-          end),
-          %{}
-        ),
+                  {id_str, out}
+                end),
+                %{}
+              )
+          }}),
       filters_fields:
         filterable_columns
         |> Enum.map(fn col ->
@@ -252,6 +301,7 @@ defmodule DataTable.LiveComponent do
 
           %{
             name: field.name,
+            label: field.label,
             can_sort: sort_field != nil,
             sort:
               case assigns.sort do
@@ -267,7 +317,7 @@ defmodule DataTable.LiveComponent do
         end),
       togglable_fields:
         Enum.map(static.fields, fn field ->
-          {field.name, id_to_string(field.id), MapSet.member?(assigns.shown_fields, field.id)}
+          {field.label, id_to_string(field.id), MapSet.member?(assigns.shown_fields, field.id)}
         end),
 
       # Pagination
@@ -392,8 +442,12 @@ defmodule DataTable.LiveComponent do
   end
 
   def field_by_str_id(str_id, socket) do
-    id = Map.fetch!(socket.assigns.static.field_id_by_str_id, str_id)
-    Map.fetch!(socket.assigns.static.field_by_id, id)
+    field_by_str_id(str_id, socket.assigns.static.field_id_by_str_id, socket.assigns.static.field_by_id)
+  end
+
+  def field_by_str_id(str_id, field_id_by_str_id, field_by_id) do
+    id = Map.fetch!(field_id_by_str_id, str_id)
+    Map.fetch!(field_by_id, id)
   end
 
   def handle_event("toggle-field", %{"field" => field}, socket) do

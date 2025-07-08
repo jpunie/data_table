@@ -8,17 +8,17 @@ defmodule ExampleWeb.ArticlesLive do
       id="table"
       source={{DataTable.Ecto, {Example.Repo, @source_query}}}>
 
-      <:col name="Id" fields={[:id]} sort_field={:id} visible={false} :let={row}>
+      <:col name="id" label="Id" fields={[:id]} sort_field={:id} visible={true} :let={row}>
         <%= row.id %>
       </:col>
 
-      <:col name="Title" fields={[:title]} sort_field={:title} filter_field={:title} filter_field_op={:contains} :let={row}>
+      <:col name="title" label="Title" fields={[:title]} sort_field={:title} filter_field={:title} filter_field_op={:contains} :let={row}>
         <%= row.title %>
       </:col>
 
-      <:row_expanded>
+      <:row_expanded :let={row} fields={[:body]}>
         <div class="p-4">
-          Expanded
+          Expanded <%= row.body %>
         </div>
       </:row_expanded>
 
@@ -32,7 +32,7 @@ defmodule ExampleWeb.ArticlesLive do
     query =
       DataTable.Ecto.Query.from(
         article in Example.Model.Article,
-        columns: %{
+        fields: %{
           id: article.id,
           title: article.title,
           body: article.body

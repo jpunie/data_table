@@ -1,4 +1,5 @@
 defmodule DataTable.Ecto do
+
   @moduledoc """
   This module implements a `DataTable.Source` which fetches data from
   an ecto `Repo`.
@@ -48,28 +49,42 @@ defmodule DataTable.Ecto do
       end)
       |> Enum.into(%{})
 
-    base_ecto_query = Enum.reduce(query_params.filters, query.base, fn filter, acc ->
-      filter_type = Map.fetch!(query.filters, filter.field)
-      field_dyn = Map.fetch!(query.fields, filter.field)
+    base_ecto_query = Enum.reduce(query_params.filters, query.base, fn
+      %{field: :all} = filter, acc ->
+        value = filter.value || ""
+        Enum.reduce(query.fields, acc, fn {field, field_dyn}, acc ->
+          case Map.get(query.filters, field) do
+            :string ->
+              # If the filter is for a string field, we use ilike to match the value
+              where_dyn = Ecto.Query.dynamic(ilike(^field_dyn, ^"%#{String.replace(value, "%", "\\%")}%"))
+              Ecto.Query.or_where(acc, ^where_dyn)
+            _ ->
+              where_dyn = Ecto.Query.dynamic(ilike(fragment("CAST(? AS VARCHAR)", ^field_dyn), ^"%#{String.replace(value, "%", "\\%")}%"))
+              Ecto.Query.or_where(acc, ^where_dyn)
+            end
+        end)
+      filter, acc ->
+        filter_type = Map.fetch!(query.filters, filter.field)
+        field_dyn = Map.fetch!(query.fields, filter.field)
 
-      value = case filter_type do
-        :integer ->
-          {value, ""} = Integer.parse(filter.value)
-          value
-        :string ->
-          filter.value || ""
-        :boolean ->
-          filter.value == "true"
-      end
+        value = case filter_type do
+          :integer ->
+            {value, ""} = Integer.parse(filter.value)
+            value
+          :string ->
+            filter.value || ""
+          :boolean ->
+            filter.value == "true"
+        end
 
-      where_dyn = case {filter_type, filter.op} do
-        {_, :eq} -> Ecto.Query.dynamic(^field_dyn == ^value)
-        {_, :lt} -> Ecto.Query.dynamic(^field_dyn < ^value)
-        {_, :gt} -> Ecto.Query.dynamic(^field_dyn > ^value)
-        {:string, :contains} -> Ecto.Query.dynamic(like(^field_dyn, ^"%#{String.replace(value, "%", "\\%")}%"))
-      end
+        where_dyn = case {filter_type, filter.op} do
+          {_, :eq} -> Ecto.Query.dynamic(^field_dyn == ^value)
+          {_, :lt} -> Ecto.Query.dynamic(^field_dyn < ^value)
+          {_, :gt} -> Ecto.Query.dynamic(^field_dyn > ^value)
+          {:string, :contains} -> Ecto.Query.dynamic(like(^field_dyn, ^"%#{String.replace(value, "%", "\\%")}%"))
+        end
 
-      Ecto.Query.where(acc, ^where_dyn)
+        Ecto.Query.where(acc, ^where_dyn)
     end)
 
     ecto_query = maybe_apply(base_ecto_query, query_params.sort, fn ecto_query, {field, dir} ->
@@ -125,6 +140,12 @@ defmodule DataTable.Ecto do
   @impl true
   def filter_types({_repo, _query}) do
     %{
+      all: %{
+        validate: fn _op, _val -> true end,
+        ops: [
+          contains: "contains",
+        ]
+      },
       string: %{
         validate: fn _op, _val -> true end,
         ops: [

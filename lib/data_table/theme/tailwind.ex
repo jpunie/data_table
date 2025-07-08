@@ -103,6 +103,7 @@ defmodule DataTable.Theme.Tailwind do
     <div>
       <.filter_header
         :if={@filter_enabled}
+        gettext={@gettext}
         filters_form={@filters_form}
         can_select={@static.can_select}
         has_selection={@has_selection}
@@ -175,6 +176,7 @@ defmodule DataTable.Theme.Tailwind do
 
         <.filters_form
           target={@target}
+          gettext={@gettext}
           filters_form={@filters_form}
           filter_column_order={@filter_column_order}
           filter_columns={@filter_columns}
@@ -209,11 +211,11 @@ defmodule DataTable.Theme.Tailwind do
               ]}>
           <div class="flex items-center justify-between">
             <a :if={not field.can_sort} class="group inline-flex">
-              <%= field.name %>
+              <%= field.label %>
             </a>
 
             <a :if={field.can_sort} href="#" class="group inline-flex" phx-click="cycle-sort" phx-target={@target} phx-value-sort-toggle-id={field.sort_toggle_id}>
-              <%= field.name %>
+              <%= field.label %>
 
               <span :if={field.sort == :asc} class="ml-2 flex-none rounded bg-gray-200 text-gray-900 group-hover:bg-gray-300">
                 <Heroicons.chevron_down mini class="h-5 w-5"/>
@@ -300,14 +302,6 @@ defmodule DataTable.Theme.Tailwind do
     """
   end
 
-  def gettext(nil, key) do
-    key
-  end
-
-  def gettext(gettext, key) do
-    Gettext.gettext(gettext, key)
-  end
-
   def table_footer(assigns) do
     ~H"""
     <tfoot>
@@ -316,12 +310,12 @@ defmodule DataTable.Theme.Tailwind do
           <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
               <p class="text-sm ">
-                <%= gettext(@gettext, "Showing") %>
+                <%= DataTable.Gettext.gettext(@gettext, "Showing") %>
                 <span :if={@total_results == 0} class="font-medium">0</span>
                 <span :if={@total_results > 0} class="font-medium"><%= @page_start_item + 1 %></span>
-                <%= gettext(@gettext, "to") %>
+                <%= DataTable.Gettext.gettext(@gettext, "to") %>
                 <span class="font-medium"><%= @page_end_item %></span>
-                <%= gettext(@gettext, "of") %>
+                <%= DataTable.Gettext.gettext(@gettext, "of") %>
                 <span class="font-medium"><%= @total_results %></span>
               </p>
             </div>
@@ -397,6 +391,7 @@ defmodule DataTable.Theme.Tailwind do
   # attr :filterable_fields, :any
 
   attr(:target, :any)
+  attr(:gettext, :any)
   attr(:filters_form, :any)
   attr(:filter_column_order, :any)
   attr(:filter_columns, :any)
@@ -406,14 +401,9 @@ defmodule DataTable.Theme.Tailwind do
   def filters_form(assigns) do
     ~H"""
     <.form for={@filters_form} phx-target={@target} phx-change="filters-change" phx-submit="filters-change" class="py-3 sm:flex items-start">
-      <h3 class="text-sm font-medium text-zinc-800">
-        <!-- Filters -->
-        <Heroicons.funnel class="w-4 h-8"/>
-      </h3>
-
       <!-- <div aria-hidden="true" class="hidden h-5 w-px bg-gray-300 sm:ml-4 sm:block"></div> -->
 
-      <div class="ml-4 min-h-[32px] flex items-center">
+      <div class="min-h-[32px] flex items-center">
         <div class="-m-1 flex flex-col space-y-2">
           <.inputs_for :let={filter} field={@filters_form[:filters]}>
             <div class="flex flex-row space-x-2">
@@ -425,7 +415,7 @@ defmodule DataTable.Theme.Tailwind do
 
               <.select
                 field={filter[:field]}
-                options={Enum.map(@filter_column_order, fn id -> {id, @filter_columns[id].name} end)}/>
+                options={Enum.map(@filter_column_order, fn id -> {id, @filter_columns[id].label} end)}/>
 
               <% field_config = @filter_columns[filter[:field].value] %>
               <.select
@@ -436,7 +426,7 @@ defmodule DataTable.Theme.Tailwind do
                 :if={field_config != nil}
                 field={filter[:op]}
                 options={Enum.map(field_config.ops_order, fn op_id ->
-                  {op_id, field_config.ops[op_id].name}
+                  {op_id, DataTable.Gettext.gettext(@gettext, field_config.ops[op_id].name)}
                 end)}/>
 
               <.text_input field={filter[:value]}/>
