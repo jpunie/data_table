@@ -68,7 +68,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
 
           <%= if @label do %>
             <%= @label %>
-            <Heroicons.chevron_down solid class="w-5 h-5 ml-2 -mr-1 dark:text-gray-100" />
+            <Heroicons.chevron_down solid class="w-4 h-4 ml-2 -mr-1 dark:text-gray-100" />
           <% end %>
 
           <%= if @trigger_element do %>
@@ -131,7 +131,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
     do: "flex items-center text-gray-400 rounded-full hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-primary-500"
 
   defp trigger_button_classes(_label, []),
-    do: "inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:text-gray-300 dark:bg-gray-900 dark:hover:bg-gray-800 dark:focus:bg-gray-800 hover:bg-gray-50 focus:outline-none"
+    do: "inline-flex justify-center w-full px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:text-gray-300 dark:bg-gray-900 dark:hover:bg-gray-800 dark:focus:bg-gray-800 hover:bg-gray-50 focus:outline-none"
 
   defp trigger_button_classes(_label, _trigger_element),
     do: "align-middle"

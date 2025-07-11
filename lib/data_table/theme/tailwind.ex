@@ -113,8 +113,19 @@ defmodule DataTable.Theme.Tailwind do
         filter_column_order={@static.filter_column_order}
         filter_columns={@static.filter_columns}
         filters_fields={@static.filters_fields}/>
-     <div :if={!@filter_enabled} class="sm:flex sm:justify-between mt-14"
-     />
+     <div :if={!@filter_enabled} class="sm:flex sm:justify-between mt-14"/>
+
+      <div class="mb-2" :if={@static.can_select and @has_selection}>
+          <Dropdown.dropdown label={DataTable.Gettext.gettext(@gettext, "Selection")} placement="right">
+            <Dropdown.dropdown_menu_item
+              :for={%{label: label, action_idx: idx} <- @static.selection_actions}
+              label={label}
+              phx-click="selection-action"
+              phx-value-action-idx={idx}
+              phx-target={@target}/>
+          </Dropdown.dropdown>
+        </div>
+
 
       <div class="flex flex-col">
         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -132,6 +143,7 @@ defmodule DataTable.Theme.Tailwind do
 
                 <.table_body
                   rows={@rows}
+                  conditional_row_class={@static.conditional_row_class || fn _ -> "" end}
                   can_select={@static.can_select}
                   field_slots={@field_slots}
                   has_row_buttons={@static.has_row_buttons}
@@ -162,18 +174,7 @@ defmodule DataTable.Theme.Tailwind do
   def filter_header(assigns) do
     ~H"""
     <div class="sm:flex sm:justify-between">
-      <div class="flex items-center">
-        <div :if={@can_select and @has_selection}>
-          <Dropdown.dropdown label="Selection" placement="right">
-            <Dropdown.dropdown_menu_item
-              :for={%{label: label, action_idx: idx} <- @selection_actions}
-              label={label}
-              phx-click="selection-action"
-              phx-value-action-idx={idx}
-              phx-target={@target}/>
-          </Dropdown.dropdown>
-        </div>
-
+      <div class="-ml-2 flex items-center">
         <.filters_form
           target={@target}
           gettext={@gettext}
@@ -196,11 +197,11 @@ defmodule DataTable.Theme.Tailwind do
     ~H"""
     <thead>
       <tr>
-        <th :if={@can_select} scope="col" class="w-10 pl-4 !border-0">
+        <th :if={@can_select} scope="col" class="w-10 pl-4 !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
           <.checkbox state={@header_selection} on_toggle="toggle-all" phx-target={@target}/>
         </th>
 
-        <th :if={@can_expand} scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 w-10 sm:pl-6 !border-0"></th>
+        <th :if={@can_expand} scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 w-10 sm:pl-6 !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300"></th>
 
         <th
             :for={{field, idx} <- Enum.with_index(@header_fields)}
@@ -217,22 +218,18 @@ defmodule DataTable.Theme.Tailwind do
             <a :if={field.can_sort} href="#" class="group inline-flex" phx-click="cycle-sort" phx-target={@target} phx-value-sort-toggle-id={field.sort_toggle_id}>
               <%= field.label %>
 
-              <span :if={field.sort == :asc} class="ml-2 flex-none rounded bg-gray-200 text-gray-900 group-hover:bg-gray-300">
-                <Heroicons.chevron_down mini class="h-5 w-5"/>
+              <span :if={field.sort == :asc} class="ml-2 flex-none items-center rounded bg-gray-200 text-gray-900 group-hover:bg-gray-300">
+                <Heroicons.chevron_down mini class="h-4 w-4"/>
               </span>
 
-              <span :if={field.sort == :desc} class="ml-2 flex-none rounded bg-gray-200 text-gray-900 group-hover:bg-gray-300">
-                <Heroicons.chevron_up mini class="h-5 w-5"/>
-              </span>
-
-              <span :if={field.sort == nil} class="invisible ml-2 flex-none rounded text-gray-400 group-hover:visible group-focus:visible">
-                <Heroicons.chevron_down mini class="h-5 w-5"/>
+              <span :if={field.sort == :desc} class="ml-2 flex-none items-center rounded bg-gray-200 text-gray-900 group-hover:bg-gray-300">
+                <Heroicons.chevron_up mini class="h-4 w-4"/>
               </span>
             </a>
 
-            <!--<a :if={field.can_filter} class="text-gray-400" href="#" phx-click="add-field-filter" phx-target={@target} phx-value-filter-id={field.filter_field_id}>
+            <%!-- <a :if={field.can_filter} class="text-gray-400" href="#" phx-click="add-field-filter" phx-target={@target} phx-value-filter-id={field.filter_field_id}>
               <Heroicons.funnel class="h-4 w-4"/>
-            </a>-->
+            </a> --%>
           </div>
         </th>
 
@@ -268,12 +265,13 @@ defmodule DataTable.Theme.Tailwind do
     ~H"""
     <tbody>
       <%= for row <- @rows do %>
-        <tr class="bg-white border-b dark:border-gray-700 dark:bg-gray-800 last:border-none;">
+        <% conditional_row_class = @conditional_row_class.(row.data) %>
+        <tr class={["bg-white border-b dark:border-gray-700 dark:bg-gray-800 last:border-none", conditional_row_class]}>
           <td :if={@can_select} class="pl-4 !border-0">
             <.checkbox state={row.selected} on_toggle="toggle-row" phx-target={@target} phx-value-id={row.id}/>
           </td>
 
-          <td :if={@can_expand} class="cursor-pointer !border-0" phx-click={JS.push("toggle-expanded", page_loading: true)} phx-target={@target} phx-value-data-id={row.id}>
+          <td :if={@can_expand} class={["cursor-pointer !border-0", conditional_row_class]} phx-click={JS.push("toggle-expanded", page_loading: true)} phx-target={@target} phx-value-data-id={row.id}>
             <% class = if @can_select, do: "ml-5", else: "ml-3" %>
             <Heroicons.chevron_up :if={row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
             <Heroicons.chevron_down :if={not row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
@@ -281,11 +279,11 @@ defmodule DataTable.Theme.Tailwind do
 
           <td
               :for={{field_slot, idx} <- Enum.with_index(@field_slots)}
-              class={["px-6 py-4 text-sm text-gray-500 dark:text-gray-400", field_slot[:class] || "", (if idx == 0, do: "!border-0")]}>
+              class={["px-6 py-4 text-sm text-gray-500 dark:text-gray-400", field_slot[:class] || "", (if idx == 0, do: "!border-0"), conditional_row_class]}>
             <%= render_slot(field_slot, row.data) %>
           </td>
 
-          <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm sm:pr-6 !border-0">
+          <td class={["relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm sm:pr-6 !border-0", conditional_row_class]}>
             <%= if @has_row_buttons do %>
               <%= render_slot(@row_buttons_slot, row.data) %>
             <% end %>
@@ -403,8 +401,8 @@ defmodule DataTable.Theme.Tailwind do
     <.form for={@filters_form} phx-target={@target} phx-change="filters-change" phx-submit="filters-change" class="py-3 sm:flex items-start">
       <!-- <div aria-hidden="true" class="hidden h-5 w-px bg-gray-300 sm:ml-4 sm:block"></div> -->
 
-      <div class="min-h-[32px] flex items-center">
-        <div class="-m-1 flex flex-col space-y-2">
+      <div class="min-h-[32px] flex flex-row items-stretch">
+        <div class="flex flex-col space-y-2">
           <.inputs_for :let={filter} field={@filters_form[:filters]}>
             <div class="flex flex-row space-x-2">
               <input
@@ -429,28 +427,33 @@ defmodule DataTable.Theme.Tailwind do
                   {op_id, DataTable.Gettext.gettext(@gettext, field_config.ops[op_id].name)}
                 end)}/>
 
-              <.text_input field={filter[:value]}/>
+              <.text_input :if={field_config.type_name != :boolean} field={filter[:value]}/>
+              <.select
+                :if={field_config.type_name == :boolean}
+                field={filter[:value]}
+                options={[{"", DataTable.Gettext.gettext(@gettext, "Choose...")}, {"true", DataTable.Gettext.gettext(@gettext, "Yes")}, {"false", DataTable.Gettext.gettext(@gettext, "No")}]}/>
+
               <label>
                 <input type="checkbox" name="filters[filters_drop][]" value={filter.index} class="hidden"/>
-                <.btn_icon>
+                <.btn_icon >
                   <Heroicons.trash class="w-4"/>
                 </.btn_icon>
               </label>
             </div>
           </.inputs_for>
 
-          <div class="flex flex-row h-8 mx-2">
+        </div>
+          <div class={["flex flex-col space-y-2 justify-end"]}>
             <label>
               <input type="checkbox" name="filters[filters_sort][]" class="hidden"/>
               <.btn_basic>
                 <:icon>
                   <Heroicons.plus class="w-4"/>
                 </:icon>
-                Filter
+                {DataTable.Gettext.gettext(@gettext, "Filter")}
               </.btn_basic>
             </label>
           </div>
-        </div>
       </div>
     </.form>
     """

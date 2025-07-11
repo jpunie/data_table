@@ -141,6 +141,7 @@ defmodule DataTable.LiveComponent do
       theme: comp_assigns.theme,
       source: source,
 
+      conditional_row_class: comp_assigns[:conditional_row_class],
       # Selection
       can_select:
         selection_actions != nil and
@@ -391,14 +392,15 @@ defmodule DataTable.LiveComponent do
         static = socket.assigns.static
 
         filters = %Filters{}
-        filters_changeset = Filters.changeset(filters, static.filter_columns, %{})
+        basic_filter = if assigns[:filter_enabled] and !is_nil(static.filter_columns) and length(Map.keys(static.filter_columns)) > 1, do: %{"filters_sort" => ["on"], "filters" => [%{"field" => "all", "op" => "contains", "value" => ""}]}, else: %{}
+        filters_changeset = Filters.changeset(filters, static.filter_columns, basic_filter)
         filters_form = Phoenix.Component.to_form(filters_changeset)
 
         socket
         |> assign(%{
           id: assigns.id,
           gettext: assigns[:gettext],
-          filter_enabled: assigns[:filter_enabled],
+          filter_enabled: assigns[:filter_enabled] && length(Map.keys(static.filter_columns)) > 1,
           filters_changeset: filters_changeset,
           filters: filters,
           filters_form: filters_form,

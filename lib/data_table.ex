@@ -151,6 +151,9 @@ defmodule DataTable do
     """
   )
 
+  attr(:conditional_row_class, :any, doc: "apply conditinal CSS class for all columns with a function")
+
+
   slot :col, doc: "One `:col` should be sepecified for each potential column in the table" do
     attr(:name, :string,
       required: true,

@@ -6,7 +6,19 @@ defmodule ExampleWeb.ArticlesLive do
     ~H"""
     <DataTable.live_data_table
       id="table"
+      filter_enabled={true}
+      always_columns={[:id, :title, :published]}
+      conditional_row_class={fn row ->
+        if row.published do
+          "bg-green-100"
+        end
+      end}
       source={{DataTable.Ecto, {Example.Repo, @source_query}}}>
+
+      <:col name="published" label="Published" visible={false} fields={[:published]} sort_field={:published} :let={row}>
+        <%= row.published %>
+      </:col>
+
 
       <:col name="id" label="Id" fields={[:id]} sort_field={:id} visible={true} :let={row}>
         <%= row.id %>
@@ -22,7 +34,7 @@ defmodule ExampleWeb.ArticlesLive do
         </div>
       </:row_expanded>
 
-      <:selection_action label="Test Action" handle_action={fn -> nil end}/>
+      <:selection_action label="Test Action" handle_action={fn x -> :ok end}/>
 
     </DataTable.live_data_table>
     """
@@ -35,12 +47,14 @@ defmodule ExampleWeb.ArticlesLive do
         fields: %{
           id: article.id,
           title: article.title,
-          body: article.body
+          body: article.body,
+          published: article.published
         },
         key: :id,
         filters: %{
           id: :integer,
-          title: :string
+          title: :string,
+          published: :boolean
         }
       )
 
