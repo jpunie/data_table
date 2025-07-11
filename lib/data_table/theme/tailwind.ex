@@ -25,9 +25,9 @@ defmodule DataTable.Theme.Tailwind do
   def btn_basic(assigns) do
     ~H"""
     <% classes = [
-      "flex cursor-pointer",
-      "rounded-lg hover:bg-indigo-50",
-      "text-zinc-800 hover:text-indigo-600",
+      "cursor-pointer",
+      "inline-flex items-center justify-center font-medium transition duration-150 ease-in-out border rounded-md focus:outline-none",
+      "text-black border-black bg-primary-400 hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-800 focus:shadow-primary-500/50",
       (if @size == :small, do: "text-sm px-2 py-1 space-x-1"),
       (if @size == :small and @icon != nil, do: "pl-1.5"),
       (if @size == :medium, do: ""),
@@ -48,11 +48,10 @@ defmodule DataTable.Theme.Tailwind do
   def btn_icon(assigns) do
     ~H"""
     <div tabindex="0" class={[
-      "cursor-pointer",
-      "flex justify-center",
+      "cursor-pointer mr-2",
+      "inline-flex items-center justify-center font-medium transition duration-150 ease-in-out border focus:outline-none",
+      "text-black border-black bg-primary-400 hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-800 focus:shadow-primary-500/50",
       "rounded-full w-7 h-7",
-      "text-zinc-800",
-      "hover:text-indigo-600 hover:bg-indigo-50"
     ]}>
       <%= render_slot(@inner_block) %>
     </div>
@@ -67,10 +66,10 @@ defmodule DataTable.Theme.Tailwind do
     <select
       name={@field.name}
       class={[
-        "text-sm pl-2 py-1 pr-10",
-        "outline-1 !border-0 !ring-0 rounded-lg",
-        "bg-zinc-100 text-zinc-800 shadow-indigo-600 outline-indigo-600",
-        "focus:text-indigo-600 focus:shadow-[0_0_2px_0px] focus:outline",
+        "block w-full py-1 pl-3 pr-10 text-sm rounded-lg cursor-pointer",
+        "border-gray-300 focus:border-primary-500 focus:ring-primary-500",
+        "disabled:bg-gray-100 disabled:cursor-not-allowed focus:outline-none",
+        "dark:border-gray-600 dark:focus:border-primary-500 dark:disabled:bg-gray-700 dark:text-gray-300 dark:bg-gray-800",
       ]}>
       <%= for {id, name} <- @options do %>
         <option value={id} selected={@field.value == id}><%= name %></option>
@@ -89,10 +88,10 @@ defmodule DataTable.Theme.Tailwind do
       name={@field.name}
       value={@field.value}
       class={[
-        "text-sm pl-2 py-1",
-        "focus:outline outline-1 !border-0 !ring-0 rounded-lg",
-        "bg-zinc-100 text-zinc-800 shadow-indigo-600 outline-indigo-600",
-        "focus:shadow-[0_0_2px_0px]",
+        "block w-full pl-2 py-1 rounded-lg shadow-sm border-gray-300 sm:text-sm",
+        "focus:border-primary-500 focus:ring-primary-500 focus:outline-none",
+        "dark:border-gray-600 dark:focus:border-primary-500 dark:bg-gray-800 dark:text-gray-300 dark:disabled:bg-gray-700",
+        "disabled:bg-gray-100 disabled:cursor-not-allowed",
         (if has_error, do: "outline outline-red-600 !bg-red-50")
       ]}/>
     """
