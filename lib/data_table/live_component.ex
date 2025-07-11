@@ -142,6 +142,7 @@ defmodule DataTable.LiveComponent do
       source: source,
 
       conditional_row_class: comp_assigns[:conditional_row_class],
+      predefined_filters: comp_assigns[:predefined_filters] || [],
       # Selection
       can_select:
         selection_actions != nil and
@@ -391,9 +392,14 @@ defmodule DataTable.LiveComponent do
 
         static = socket.assigns.static
 
+        predefined_filters = if assigns[:filter_enabled] and !is_nil(static.filter_columns) and length(Map.keys(static.filter_columns)) > 1 do
+          [%{field: "all", op: "contains", value: nil}] ++ static.predefined_filters
+        else
+          []
+        end
+
         filters = %Filters{}
-        basic_filter = if assigns[:filter_enabled] and !is_nil(static.filter_columns) and length(Map.keys(static.filter_columns)) > 1, do: %{"filters_sort" => ["on"], "filters" => [%{"field" => "all", "op" => "contains", "value" => ""}]}, else: %{}
-        filters_changeset = Filters.changeset(filters, static.filter_columns, basic_filter)
+        filters_changeset = Filters.changeset(filters, static.filter_columns, %{"filters_sort" => ["on"], "filters" => predefined_filters})
         filters_form = Phoenix.Component.to_form(filters_changeset)
 
         socket
@@ -414,6 +420,7 @@ defmodule DataTable.LiveComponent do
           dispatched_nav: nil,
           first: false
         })
+        |> apply_filters_changeset(filters_changeset)
         |> assign_base_render_data()
         |> do_query()
       else

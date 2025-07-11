@@ -143,6 +143,19 @@ defmodule DataTable do
     """
   )
 
+  attr(:predefined_filters, :any, default: [], required: false,
+    doc: """
+    A list of predefined filters that will be applied to the table.
+    Each filter should be a map with `field`, `op`, and `value` keys.
+    Example:
+    ```elixir
+    [
+      %{field: "active", op: :eq, value: "true"}
+    ]
+    ```
+    """
+  )
+
   attr(:gettext, :atom, default: nil, required: false)
 
   attr(:always_columns, :list,

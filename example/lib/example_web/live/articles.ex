@@ -7,6 +7,9 @@ defmodule ExampleWeb.ArticlesLive do
     <DataTable.live_data_table
       id="table"
       filter_enabled={true}
+      predefined_filters={[
+        %{field: "published", op: "eq", value: "true"},
+      ]}
       always_columns={[:id, :title, :published]}
       conditional_row_class={fn row ->
         if row.published do
