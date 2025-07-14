@@ -26,8 +26,8 @@ defmodule DataTable.Theme.Tailwind do
     ~H"""
     <% classes = [
       "cursor-pointer",
-      "inline-flex items-center justify-center font-medium transition duration-150 ease-in-out border rounded-md focus:outline-none",
-      "text-black border-black bg-primary-400 hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-800 focus:shadow-primary-500/50",
+      "inline-flex items-center justify-center border-primary-400 dark:border-primary-400 dark:hover:border-primary-300 dark:hover:text-primary-300 dark:hover:bg-transparent",
+      "dark:text-primary-400 hover:border-primary-600 text-primary-600 hover:text-primary-700 active:bg-primary-200 hover:bg-primary-50 focus:border-primary-700 focus:shadow-primary-500/50",
       (if @size == :small, do: "text-sm px-2 py-1 space-x-1"),
       (if @size == :small and @icon != nil, do: "pl-1.5"),
       (if @size == :medium, do: ""),
@@ -49,8 +49,8 @@ defmodule DataTable.Theme.Tailwind do
     ~H"""
     <div tabindex="0" class={[
       "cursor-pointer mr-2",
-      "inline-flex items-center justify-center font-medium transition duration-150 ease-in-out border focus:outline-none",
-      "text-black border-black bg-primary-400 hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-800 focus:shadow-primary-500/50",
+      "inline-flex items-center justify-center border-primary-400 dark:border-primary-400 dark:hover:border-primary-300 dark:hover:text-primary-300 dark:hover:bg-transparent",
+      "dark:text-primary-400 hover:border-primary-600 text-primary-600 hover:text-primary-700 active:bg-primary-200 hover:bg-primary-50 focus:border-primary-700 focus:shadow-primary-500/50",
       "rounded-full w-7 h-7",
     ]}>
       <%= render_slot(@inner_block) %>
