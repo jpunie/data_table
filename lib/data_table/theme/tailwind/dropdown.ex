@@ -18,21 +18,22 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
   @transition_out_start "transform opacity-100 scale-100"
   @transition_out_end "transform opacity-0 scale-95"
 
-  attr :options_container_id, :string
-  attr :label, :string, default: nil, doc: "labels your dropdown option"
-  attr :class, :any, default: nil, doc: "any extra CSS class for the parent container"
+  attr(:options_container_id, :string)
+  attr(:label, :string, default: nil, doc: "labels your dropdown option")
+  attr(:class, :any, default: nil, doc: "any extra CSS class for the parent container")
 
-  attr :menu_items_wrapper_class, :any,
+  attr(:menu_items_wrapper_class, :any,
     default: nil,
     doc: "any extra CSS class for menu item wrapper container"
+  )
 
-  attr :js_lib, :string, default: "live_view_js"
+  attr(:js_lib, :string, default: "live_view_js")
 
-  attr :placement, :string, default: "left", values: ["left", "right"]
-  attr :rest, :global
+  attr(:placement, :string, default: "left", values: ["left", "right"])
+  attr(:rest, :global)
 
-  slot :trigger_element
-  slot :inner_block, required: false
+  slot(:trigger_element)
+  slot(:inner_block, required: false)
 
   @doc """
     <.dropdown label="Dropdown" js_lib="alpine_js|live_view_js">
@@ -85,7 +86,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
         class={[
           placement_class(@placement),
           @menu_items_wrapper_class,
-          "absolute z-30 w-56 mt-2 bg-white rounded-md shadow-lg dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
+          "absolute z-30 w-56 mt-2 bg-white rounded-md shadow-lg dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none"
         ]}
         role="menu"
         id={@options_container_id}
@@ -100,17 +101,18 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
     """
   end
 
-  attr :to, :string, default: nil, doc: "link path"
-  attr :label, :string, doc: "link label"
-  attr :class, :any, default: nil, doc: "any additional CSS classes"
-  attr :disabled, :boolean, default: false
+  attr(:to, :string, default: nil, doc: "link path")
+  attr(:label, :string, doc: "link label")
+  attr(:class, :any, default: nil, doc: "any additional CSS classes")
+  attr(:disabled, :boolean, default: false)
 
-  attr :link_type, :string,
+  attr(:link_type, :string,
     default: "button",
     values: ["a", "live_patch", "live_redirect", "button"]
+  )
 
-  attr :rest, :global, include: ~w(method download hreflang ping referrerpolicy rel target type)
-  slot :inner_block, required: false
+  attr(:rest, :global, include: ~w(method download hreflang ping referrerpolicy rel target type))
+  slot(:inner_block, required: false)
 
   def dropdown_menu_item(assigns) do
     ~H"""
@@ -128,10 +130,12 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
   end
 
   defp trigger_button_classes(nil, []),
-    do: "flex items-center text-gray-400 rounded-full hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-primary-500"
+    do:
+      "flex items-center text-gray-400 rounded-full hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-primary-500"
 
   defp trigger_button_classes(_label, []),
-    do: "inline-flex justify-center w-full px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:text-gray-300 dark:bg-gray-900 dark:hover:bg-gray-800 dark:focus:bg-gray-800 hover:bg-gray-50 focus:outline-none"
+    do:
+      "inline-flex justify-center w-full px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:text-gray-300 dark:bg-gray-900 dark:hover:bg-gray-800 dark:focus:bg-gray-800 hover:bg-gray-50 focus:outline-none"
 
   defp trigger_button_classes(_label, _trigger_element),
     do: "align-middle"

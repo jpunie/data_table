@@ -129,8 +129,8 @@ defmodule DataTable.Theme.Tailwind do
       <div class="flex flex-col">
         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-300 bg-white">
+            <div class="overflow-hidden shadow border border-gray-300 dark:border-gray-700 md:rounded-lg">
+              <table class="min-w-full divide-y divide-gray-300 bg-white dark:divide-gray-900 dark:bg-gray-800">
                 <.table_header
                   can_select={@static.can_select}
                   header_selection={@header_selection}
@@ -173,7 +173,7 @@ defmodule DataTable.Theme.Tailwind do
   def filter_header(assigns) do
     ~H"""
     <div class="sm:flex sm:justify-between">
-      <div class="-ml-2 flex items-center">
+      <div class="flex items-center">
         <.filters_form
           target={@target}
           gettext={@gettext}
@@ -240,10 +240,10 @@ defmodule DataTable.Theme.Tailwind do
                 <Heroicons.list_bullet mini class="h-4 w-4"/>
               </:trigger_element>
 
-              <div class="p-4 top-4 right-0 rounded space-y-2">
+              <div class="p-4 top-4 right-0 rounded border-gray-300 dark:border-gray-700 space-y-2">
                 <div :for={{name, id, checked} <- @togglable_fields} class="relative flex items-start cursor-pointer" phx-click="toggle-field" phx-target={@target} phx-value-field={id}>
                   <div class="flex h-5 w-5 items-center">
-                    <div class="border border-gray-300 rounded relative w-[18px] h-[18px]">
+                    <div class="border border-gray-300 dark:border-gray-700 rounded relative w-[18px] h-[18px]">
                       <Heroicons.check :if={checked} solid={true} class="w-4"/>
                     </div>
                   </div>
@@ -265,7 +265,7 @@ defmodule DataTable.Theme.Tailwind do
     <tbody>
       <%= for row <- @rows do %>
         <% conditional_row_class = @conditional_row_class.(row.data) %>
-        <tr class={["bg-white border-b dark:border-gray-700 dark:bg-gray-800 last:border-none", conditional_row_class]}>
+        <tr class={["bg-white border-b border-gray-300 dark:border-gray-700 dark:bg-gray-800 last:border-none", conditional_row_class]}>
           <td :if={@can_select} class="pl-4 !border-0">
             <.checkbox state={row.selected} on_toggle="toggle-row" phx-target={@target} phx-value-id={row.id}/>
           </td>
@@ -289,7 +289,7 @@ defmodule DataTable.Theme.Tailwind do
           </td>
         </tr>
 
-        <tr :if={row.expanded} class="bg-white border-b dark:border-gray-700 dark:bg-gray-800 last:border-none;">
+        <tr :if={row.expanded} class="bg-white border-b border-gray-300 dark:border-gray-700 dark:bg-gray-800 last:border-none;">
           <td colspan="50">
             <%= render_slot(@row_expanded_slot, row.data) %>
           </td>
@@ -301,7 +301,7 @@ defmodule DataTable.Theme.Tailwind do
 
   def table_footer(assigns) do
     ~H"""
-    <tfoot>
+    <tfoot class="!border-0">
       <tr class="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
         <td colspan="20" class="py-2 px-4">
           <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
