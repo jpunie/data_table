@@ -75,12 +75,10 @@ defmodule DataTable.NavState do
 
   @type t :: %__MODULE__{}
 
-  defstruct [
-    set: MapSet.new([:filters, :sort, :page]),
-    filters: [],
-    sort: nil,
-    page: 0,
-  ]
+  defstruct set: MapSet.new([:filters, :sort, :page]),
+            filters: [],
+            sort: nil,
+            page: 0
 
   @type kv :: [{key :: String.t(), value :: String.t()}]
 
@@ -92,22 +90,24 @@ defmodule DataTable.NavState do
         {"filter[#{filter}]#{op}", value || ""}
       end)
 
-    page_params = if nav_state.page == 1 do
-      []
-    else
-      [{"page", nav_state.page}]
-    end
+    page_params =
+      if nav_state.page == 1 do
+        []
+      else
+        [{"page", nav_state.page}]
+      end
 
-    sort_params = case nav_state.sort do
-      nil -> []
-      {field, :asc} -> [{"asc", Atom.to_string(field)}]
-      {field, :desc} -> [{"desc", Atom.to_string(field)}]
-    end
+    sort_params =
+      case nav_state.sort do
+        nil -> []
+        {field, :asc} -> [{"asc", Atom.to_string(field)}]
+        {field, :desc} -> [{"desc", Atom.to_string(field)}]
+      end
 
     Enum.concat([
       page_params,
       sort_params,
-      filter_params,
+      filter_params
     ])
   end
 
@@ -128,7 +128,7 @@ defmodule DataTable.NavState do
       Enum.flat_map(query, fn {k, v} ->
         case {k, Regex.run(~r/^filter\[([^\]]+)\](.+)$/, k)} do
           {_k, [_, field, op]} ->
-            [{:filter, {field, op, v}}]
+            [{:filter, {field, op, v || ""}}]
 
           {"asc", _} ->
             field = String.to_existing_atom(v)
@@ -144,29 +144,32 @@ defmodule DataTable.NavState do
               _ -> []
             end
 
-          _ -> []
+          _ ->
+            []
         end
       end)
 
     Enum.reduce(components, nav_state, fn
-      {:page, page}, s -> %{s | page: page}
-      {:sort, sort}, s -> %{s | sort: sort}
+      {:page, page}, s ->
+        %{s | page: page}
+
+      {:sort, sort}, s ->
+        %{s | sort: sort}
+
       {:filter, filter}, s ->
-        %{ s |
-          filters: s.filters ++ [filter]
-        }
+        %{s | filters: s.filters ++ [filter]}
     end)
   end
 
   @spec decode_query_string(base_nav_state :: t(), query_string :: String.t()) :: t()
   def decode_query_string(nav_state \\ %__MODULE__{}, query_string) do
-    query_string = case query_string do
-      "?" <> str -> str
-      str -> str
-    end
+    query_string =
+      case query_string do
+        "?" <> str -> str
+        str -> str
+      end
 
     query = Enum.to_list(URI.query_decoder(query_string || ""))
     decode(nav_state, query)
   end
-
 end

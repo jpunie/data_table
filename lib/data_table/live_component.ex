@@ -109,28 +109,28 @@ defmodule DataTable.LiveComponent do
 
     fields_by_str_id =
       fields
-        |> Enum.map(fn
-          %{id: id, name: name} when is_atom(id) -> {Atom.to_string(id), name}
-          %{id: id, name: name} when is_binary(id) -> {id, name}
-        end)
-        |> Enum.into(%{})
+      |> Enum.map(fn
+        %{id: id, name: name} when is_atom(id) -> {Atom.to_string(id), name}
+        %{id: id, name: name} when is_binary(id) -> {id, name}
+      end)
+      |> Enum.into(%{})
 
     fields_by_id =
       fields
-        |> Enum.map(&{&1.id, &1})
-        |> Enum.into(%{})
+      |> Enum.map(&{&1.id, &1})
+      |> Enum.into(%{})
 
-
-    filterable_columns = DataTable.Source.filterable_fields(source)
-    |> Enum.map(fn %{col_id: col_id, type: type} ->
-      %{
-        col_id: col_id,
-        type: type,
-        name: Map.fetch!(fields_by_id, Atom.to_string(col_id)).name,
-        label: Map.fetch!(fields_by_id, Atom.to_string(col_id)).label
-      }
-    end)
-    |> List.insert_at(0, %{
+    filterable_columns =
+      DataTable.Source.filterable_fields(source)
+      |> Enum.map(fn %{col_id: col_id, type: type} ->
+        %{
+          col_id: col_id,
+          type: type,
+          name: Map.fetch!(fields_by_id, Atom.to_string(col_id)).name,
+          label: Map.fetch!(fields_by_id, Atom.to_string(col_id)).label
+        }
+      end)
+      |> List.insert_at(0, %{
         col_id: :all,
         type: :all,
         name: "All",
@@ -140,7 +140,6 @@ defmodule DataTable.LiveComponent do
     static = %{
       theme: comp_assigns.theme,
       source: source,
-
       conditional_row_class: comp_assigns[:conditional_row_class],
       predefined_filters: comp_assigns[:predefined_filters] || [],
       # Selection
@@ -166,10 +165,8 @@ defmodule DataTable.LiveComponent do
           %{id: id} -> [id]
         end)
         |> Enum.concat(),
-      field_id_by_str_id:
-        fields_by_str_id,
-      field_by_id:
-        fields_by_id,
+      field_id_by_str_id: fields_by_str_id,
+      field_by_id: fields_by_id,
       always_columns:
         comp_assigns.row_buttons
         |> Enum.map(fn rb -> Map.get(rb, :fields, []) end)
@@ -190,8 +187,8 @@ defmodule DataTable.LiveComponent do
           Atom.to_string(data.col_id)
         end),
       filter_columns:
-      filterable_columns
-      |> Enum.map(fn data ->
+        filterable_columns
+        |> Enum.map(fn data ->
           id_str = Atom.to_string(data.col_id)
 
           out = %{
@@ -223,7 +220,8 @@ defmodule DataTable.LiveComponent do
           {id_str, out}
         end)
         |> Enum.into(%{})
-        |> Map.merge(%{"all" => %{
+        |> Map.merge(%{
+          "all" => %{
             id: "all",
             name: "All",
             label: DataTable.Gettext.gettext(comp_assigns.gettext, "All"),
@@ -247,7 +245,8 @@ defmodule DataTable.LiveComponent do
                 end),
                 %{}
               )
-          }}),
+          }
+        }),
       filters_fields:
         filterable_columns
         |> Enum.map(fn col ->
@@ -392,14 +391,22 @@ defmodule DataTable.LiveComponent do
 
         static = socket.assigns.static
 
-        predefined_filters = if assigns[:filter_enabled] and !is_nil(static.filter_columns) and length(Map.keys(static.filter_columns)) > 1 do
-          [%{field: "all", op: "contains", value: nil}] ++ static.predefined_filters
-        else
-          []
-        end
+        predefined_filters =
+          if assigns[:filter_enabled] and !is_nil(static.filter_columns) and
+               length(Map.keys(static.filter_columns)) > 1 do
+            [%{field: "all", op: "contains", value: nil}] ++ static.predefined_filters
+          else
+            []
+          end
 
         filters = %Filters{}
-        filters_changeset = Filters.changeset(filters, static.filter_columns, %{"filters_sort" => ["on"], "filters" => predefined_filters})
+
+        filters_changeset =
+          Filters.changeset(filters, static.filter_columns, %{
+            "filters_sort" => ["on"],
+            "filters" => predefined_filters
+          })
+
         filters_form = Phoenix.Component.to_form(filters_changeset)
 
         socket
@@ -451,7 +458,11 @@ defmodule DataTable.LiveComponent do
   end
 
   def field_by_str_id(str_id, socket) do
-    field_by_str_id(str_id, socket.assigns.static.field_id_by_str_id, socket.assigns.static.field_by_id)
+    field_by_str_id(
+      str_id,
+      socket.assigns.static.field_id_by_str_id,
+      socket.assigns.static.field_by_id
+    )
   end
 
   def field_by_str_id(str_id, field_id_by_str_id, field_by_id) do
@@ -570,15 +581,9 @@ defmodule DataTable.LiveComponent do
     source = static.source
     id_col = DataTable.Source.key(source)
 
-    query_params = make_query_params(socket)
-
-    query_params = %{
-      query_params
-      | shown_columns: [id_col],
-        sort: nil,
-        page: 0,
-        page_size: nil
-    }
+    query_params =
+      make_query_params(socket)
+      |> Map.merge(%{shown_columns: [id_col], sort: nil, page: 0, page_size: nil})
 
     evaluate_selection = fn ->
       %{results: results} = DataTable.Source.query(source, query_params)
@@ -646,7 +651,7 @@ defmodule DataTable.LiveComponent do
     %DataTable.NavState{
       filters:
         Enum.map(raw_filters.filters, fn %{field: field, op: op, value: value} ->
-          {field, op, value}
+          {field, op, value || ""}
         end),
       sort: socket.assigns.sort,
       page: socket.assigns.page + 1

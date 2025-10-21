@@ -200,13 +200,13 @@ defmodule DataTable.Theme.Tailwind do
           <.checkbox state={@header_selection} on_toggle="toggle-all" phx-target={@target}/>
         </th>
 
-        <th :if={@can_expand} scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 w-10 sm:pl-6 !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300"></th>
+        <th :if={@can_expand} scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibol w-10 sm:pl-6 !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300"></th>
 
         <th
             :for={{field, idx} <- Enum.with_index(@header_fields)}
             scope="col"
             class={[
-              "whitespace-nowrap px-6 py-3 text-xs font-medium tracking-wider text-left uppercase text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300",
+              "px-6 py-3 text-xs font-medium tracking-wider text-left uppercase text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300",
               (if idx == 0, do: "!border-0")
               ]}>
           <div class="flex items-center justify-between">
@@ -263,14 +263,15 @@ defmodule DataTable.Theme.Tailwind do
   def table_body(assigns) do
     ~H"""
     <tbody>
-      <%= for row <- @rows do %>
+      <%= for {row, idx} <- Enum.with_index(@rows) do %>
         <% conditional_row_class = @conditional_row_class.(row.data) %>
-        <tr class={["bg-white border-b border-gray-300 dark:border-gray-700 dark:bg-gray-800 last:border-none", conditional_row_class]}>
+        <% row_class = if rem(idx, 2) == 0, do: "bg-base-100 dark:bg-gray-800", else: "bg-base-400 dark:bg-gray-600" %>
+        <tr class={[row_class, "border-b border-gray-300 dark:border-gray-700 last:border-none", conditional_row_class]}>
           <td :if={@can_select} class="pl-4 !border-0">
             <.checkbox state={row.selected} on_toggle="toggle-row" phx-target={@target} phx-value-id={row.id}/>
           </td>
 
-          <td :if={@can_expand} class={["cursor-pointer !border-0", conditional_row_class]} phx-click={JS.push("toggle-expanded", page_loading: true)} phx-target={@target} phx-value-data-id={row.id}>
+          <td :if={@can_expand} class={[row_class, "cursor-pointer !border-0", conditional_row_class]} phx-click={JS.push("toggle-expanded", page_loading: true)} phx-target={@target} phx-value-data-id={row.id}>
             <% class = if @can_select, do: "ml-5", else: "ml-3" %>
             <Heroicons.chevron_up :if={row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
             <Heroicons.chevron_down :if={not row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
@@ -278,11 +279,11 @@ defmodule DataTable.Theme.Tailwind do
 
           <td
               :for={{field_slot, idx} <- Enum.with_index(@field_slots)}
-              class={["px-6 py-4 text-sm text-gray-500 dark:text-gray-400", field_slot[:class] || "", (if idx == 0, do: "!border-0"), conditional_row_class]}>
+              class={[row_class, "px-6 py-4 text-sm text-gray-500 dark:text-gray-400", field_slot[:class] || "", (if idx == 0, do: "!border-0"), conditional_row_class]}>
             <%= render_slot(field_slot, row.data) %>
           </td>
 
-          <td class={["relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm sm:pr-6 !border-0", conditional_row_class]}>
+          <td class={[row_class, "relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm sm:pr-6 !border-0", conditional_row_class]}>
             <%= if @has_row_buttons do %>
               <%= render_slot(@row_buttons_slot, row.data) %>
             <% end %>
