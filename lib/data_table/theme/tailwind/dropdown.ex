@@ -56,7 +56,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
     <div
       {@rest}
       {js_attributes("container", @js_lib, @options_container_id)}
-      class={[@class, "relative inline-block text-left"]}
+      class={[@class, "relative inline-block text-left z-index-50"]}
     >
       <div>
         <button
