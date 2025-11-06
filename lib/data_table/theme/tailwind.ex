@@ -318,7 +318,6 @@ defmodule DataTable.Theme.Tailwind do
               </p>
             </div>
             <div>
-              <% pages = Util.generate_pages(@page, @page_size, @total_results) %>
               <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                 <a :if={@has_prev} phx-click="change-page" phx-target={@target} phx-value-page={@page - 1} class="inline-flex items-center justify-center rounded-l-md leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-400">
                   <span class="sr-only">Previous</span>
@@ -329,19 +328,7 @@ defmodule DataTable.Theme.Tailwind do
                   <Heroicons.chevron_left mini={true} class="h-5 w-5"/>
                 </a>
 
-                <a
-                  :for={{:page, page_num, current} <- pages}
-                  phx-click="change-page"
-                  phx-target={@target}
-                  phx-value-page={page_num}
-                  class={[
-                    (
-                      if current, do: "inline-flex items-center justify-center leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-                        else: "inline-flex items-center justify-center leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-400"
-                    )
-                  ]}>
-                  <%= page_num + 1 %>
-                </a>
+                <DataTable.Theme.Util.render_pages page={@page} page_size={@page_size} total_results={@total_results} target={@target} />
 
                 <a :if={@has_next} phx-click="change-page" phx-target={@target} phx-value-page={@page + 1} class="inline-flex items-center justify-center rounded-r-md leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-400">
                   <span class="sr-only">Next</span>
