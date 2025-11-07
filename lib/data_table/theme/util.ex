@@ -5,7 +5,13 @@ defmodule DataTable.Theme.Util do
 
   import Phoenix.Component
 
-  def generate_pages(page, page_size, total_results, with_ellipsis \\ false) do
+  def generate_pages(page, page_size, total_results, with_ellipsis \\ false)
+
+  def generate_pages(_page, _page_size, 0, _with_ellipsis) do
+    [{:page, 0, true}]
+  end
+
+  def generate_pages(page, page_size, total_results, with_ellipsis) do
     max_page = div(total_results + (page_size - 1), page_size) - 1
 
     middle_pages =
