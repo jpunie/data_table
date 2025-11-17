@@ -90,7 +90,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
         class={[
           placement_class(@placement),
           @menu_items_wrapper_class,
-          "absolute z-30 w-56 mt-2 bg-white rounded-md shadow-lg dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none"
+          "fixed z-30 w-56 mt-2 bg-white rounded-md shadow-lg dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none"
         ]}
         role="menu"
         id={@options_container_id}
