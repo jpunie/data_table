@@ -99,7 +99,7 @@ defmodule DataTable.Theme.Tailwind do
 
   def root(assigns) do
     ~H"""
-    <div>
+    <div id={@id}>
       <.filter_header
         :if={@filter_enabled}
         gettext={@gettext}
@@ -138,7 +138,9 @@ defmodule DataTable.Theme.Tailwind do
                   can_expand={@static.can_expand}
                   row_expanded_slot={@row_expanded}
                   header_fields={@header_fields}
-                  togglable_fields={@togglable_fields}/>
+                  togglable_fields={@togglable_fields}
+                  table_container_id={@id}
+                  dropdown_open={@static.dropdown_open}/>
 
                 <.table_body
                   rows={@rows}
@@ -235,12 +237,12 @@ defmodule DataTable.Theme.Tailwind do
         <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 w-0 whitespace-nowrap !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
           <span class="sr-only">Buttons</span>
           <div class="flex justify-end content-center">
-            <Dropdown.dropdown>
+            <Dropdown.dropdown target={@target} options_container_id={"dropdown_#{@table_container_id}"} dropdown_open={@dropdown_open}>
               <:trigger_element>
                 <Heroicons.list_bullet mini class="h-4 w-4"/>
               </:trigger_element>
 
-              <div class="p-4 top-4 right-0 rounded border-gray-300 dark:border-gray-700 space-y-2">
+              <div class="p-4 top-4 left-0 rounded border-gray-300 dark:border-gray-700 space-y-2">
                 <div :for={{name, id, checked} <- @togglable_fields} class="relative flex items-start cursor-pointer" phx-click="toggle-field" phx-target={@target} phx-value-field={id}>
                   <div class="flex h-5 w-5 items-center">
                     <div class="border border-gray-300 dark:border-gray-700 rounded relative w-[18px] h-[18px]">

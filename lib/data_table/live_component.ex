@@ -139,6 +139,7 @@ defmodule DataTable.LiveComponent do
 
     static = %{
       theme: comp_assigns.theme,
+      dropdown_open: false,
       source: source,
       conditional_row_class: comp_assigns[:conditional_row_class],
       predefined_filters: comp_assigns[:predefined_filters] || [],
@@ -468,6 +469,40 @@ defmodule DataTable.LiveComponent do
   def field_by_str_id(str_id, field_id_by_str_id, field_by_id) do
     id = Map.fetch!(field_id_by_str_id, str_id)
     Map.fetch!(field_by_id, id)
+  end
+
+  def handle_event(
+        "toggle-dropdown",
+        %{"dropdown_id" => _dropdown_id},
+        %{assigns: %{static: static_assigns}} = socket
+      ) do
+    state = Map.get(static_assigns, :dropdown_open, false)
+
+    socket =
+      socket
+      |> assign(dropdown_open: !state)
+      |> assign(static: static_assigns |> Map.put(:dropdown_open, !state))
+      |> assign_base_render_data()
+      |> do_query()
+      |> assign_query_render_data()
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "hide-dropdown",
+        _,
+        %{assigns: %{static: static_assigns}} = socket
+      ) do
+    socket =
+      socket
+      |> assign(dropdown_open: false)
+      |> assign(static: static_assigns |> Map.put(:dropdown_open, false))
+      |> assign_base_render_data()
+      |> do_query()
+      |> assign_query_render_data()
+
+    {:noreply, socket}
   end
 
   def handle_event("toggle-field", %{"field" => field}, socket) do

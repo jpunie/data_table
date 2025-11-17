@@ -30,6 +30,8 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
   attr(:js_lib, :string, default: "live_view_js")
 
   attr(:placement, :string, default: "left", values: ["left", "right"])
+  attr(:target, :any)
+  attr(:dropdown_open, :boolean, default: false)
   attr(:rest, :global)
 
   slot(:trigger_element)
@@ -55,15 +57,17 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
     ~H"""
     <div
       {@rest}
-      {js_attributes("container", @js_lib, @options_container_id)}
+      {js_attributes(@target, "container", @js_lib, @options_container_id)}
       class={[@class, "relative inline-block text-left z-index-50"]}
     >
       <div>
         <button
           type="button"
           class={trigger_button_classes(@label, @trigger_element)}
-          {js_attributes("button", @js_lib, @options_container_id)}
           aria-haspopup="true"
+          phx-click="toggle-dropdown"
+          phx-target={@target}
+          phx-value-dropdown_id={@options_container_id}
         >
           <span class="sr-only">Open options</span>
 
@@ -82,7 +86,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
         </button>
       </div>
       <div
-        {js_attributes("options_container", @js_lib, @options_container_id)}
+        {js_attributes(@target, "options_container", @js_lib, @options_container_id, @dropdown_open)}
         class={[
           placement_class(@placement),
           @menu_items_wrapper_class,
@@ -140,12 +144,11 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
   defp trigger_button_classes(_label, _trigger_element),
     do: "align-middle"
 
-  defp js_attributes("container", "live_view_js", options_container_id) do
+  defp js_attributes(target, element, js, id, dropdown_open \\ false)
+
+  defp js_attributes(target, "container", "live_view_js", _options_container_id, _) do
     hide =
-      JS.hide(
-        to: "##{options_container_id}",
-        transition: {@transition_out_base, @transition_out_start, @transition_out_end}
-      )
+      JS.push("hide-dropdown", target: target)
 
     %{
       "phx-click-away": hide,
@@ -154,22 +157,22 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
     }
   end
 
-  defp js_attributes("button", "live_view_js", options_container_id) do
-    %{
-      "phx-click":
-        JS.toggle(
-          to: "##{options_container_id}",
-          display: "block",
-          in: {@transition_in_base, @transition_in_start, @transition_in_end},
-          out: {@transition_out_base, @transition_out_start, @transition_out_end}
-        )
-    }
-  end
-
-  defp js_attributes("options_container", "live_view_js", _options_container_id) do
-    %{
-      style: "display: none;"
-    }
+  defp js_attributes(
+         _target,
+         "options_container",
+         "live_view_js",
+         _options_container_id,
+         dropdown_open
+       ) do
+    if dropdown_open do
+      %{
+        style: "display: block;"
+      }
+    else
+      %{
+        style: "display: none;"
+      }
+    end
   end
 
   defp placement_class("left"), do: "right-0 origin-top-right"
