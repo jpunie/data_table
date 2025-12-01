@@ -453,6 +453,20 @@ defmodule DataTable.LiveComponent do
         socket
       end
 
+    socket =
+      if assigns[:reload] == true && !is_nil(assigns[:source]) do
+        static =
+          socket.assigns.static
+          |> Map.put(:source, assigns.source)
+          |> Map.put(:reload, false)
+
+        socket
+        |> assign(static: static)
+        |> do_query()
+      else
+        socket
+      end
+
     socket = assign_query_render_data(socket)
 
     {:ok, socket}
