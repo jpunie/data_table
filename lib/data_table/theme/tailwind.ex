@@ -99,73 +99,85 @@ defmodule DataTable.Theme.Tailwind do
 
   def root(assigns) do
     ~H"""
-    <div id={@id}>
-      <.filter_header
-        :if={@filter_enabled}
-        gettext={@gettext}
-        filters_form={@filters_form}
-        can_select={@static.can_select}
-        has_selection={@has_selection}
-        selection_actions={@static.selection_actions}
-        target={@target}
-        top_right_slot={@top_right}
-        filter_column_order={@static.filter_column_order}
-        filter_columns={@static.filter_columns}
-        filters_fields={@static.filters_fields}/>
-     <div :if={!@filter_enabled} class="sm:flex sm:justify-between mt-14"/>
-
-      <div class="mb-2" :if={@static.can_select and @has_selection}>
-          <Dropdown.dropdown label={DataTable.Gettext.gettext(@gettext, "Selection")} placement="right">
-            <Dropdown.dropdown_menu_item
-              :for={%{label: label, action_idx: idx} <- @static.selection_actions}
-              label={label}
-              phx-click="selection-action"
-              phx-value-action-idx={idx}
-              phx-target={@target}/>
-          </Dropdown.dropdown>
+    <div id={@id} class="bg-white dark:bg-gray-900 rounded-xl shadow-xs border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div :if={@static.title || @top_right != []} class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start gap-4">
+        <div :if={@static.title}>
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+            <%= @static.title %>
+          </h3>
+          <p :if={@static.subtitle} class="text-[10px] text-gray-400">
+            <%= @static.subtitle %>
+          </p>
         </div>
 
+        <div :if={@top_right != []} class="flex-none ml-auto">
+          <%!-- <%= @top_right.() %> --%>
+          <%= render_slot(@top_right) %>
+        </div>
+      </div>
+
+      <div class="p-4">
+        <.filter_header
+          :if={@filter_enabled}
+          gettext={@gettext}
+          filters_form={@filters_form}
+          can_select={@static.can_select}
+          has_selection={@has_selection}
+          selection_actions={@static.selection_actions}
+          target={@target}
+          filter_column_order={@static.filter_column_order}
+          filter_columns={@static.filter_columns}
+          filters_fields={@static.filters_fields}/>
+       <div :if={!@filter_enabled} class="sm:flex sm:justify-between"/>
+
+        <div class="mb-2" :if={@static.can_select and @has_selection}>
+            <Dropdown.dropdown label={DataTable.Gettext.gettext(@gettext, "Selection")} placement="right">
+              <Dropdown.dropdown_menu_item
+                :for={%{label: label, action_idx: idx} <- @static.selection_actions}
+                label={label}
+                phx-click="selection-action"
+                phx-value-action-idx={idx}
+                phx-target={@target}/>
+            </Dropdown.dropdown>
+          </div>
+      </div>
 
       <div class="flex flex-col">
-        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div class="overflow-hidden shadow border border-gray-300 dark:border-gray-700 md:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-300 bg-white dark:divide-gray-900 dark:bg-gray-800">
-                <.table_header
-                  can_select={@static.can_select}
-                  header_selection={@header_selection}
-                  target={@target}
-                  can_expand={@static.can_expand}
-                  row_expanded_slot={@row_expanded}
-                  header_fields={@header_fields}
-                  togglable_fields={@togglable_fields}
-                  table_container_id={@id}
-                  dropdown_open={@static.dropdown_open}/>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-300 bg-white dark:divide-gray-900 dark:bg-gray-800">
+            <.table_header
+              can_select={@static.can_select}
+              header_selection={@header_selection}
+              target={@target}
+              can_expand={@static.can_expand}
+              row_expanded_slot={@row_expanded}
+              header_fields={@header_fields}
+              togglable_fields={@togglable_fields}
+              table_container_id={@id}
+              dropdown_open={@static.dropdown_open}/>
 
-                <.table_body
-                  rows={@rows}
-                  conditional_row_class={@static.conditional_row_class || fn _ -> "" end}
-                  can_select={@static.can_select}
-                  field_slots={@field_slots}
-                  has_row_buttons={@static.has_row_buttons}
-                  row_buttons_slot={@static.row_buttons_slot}
-                  can_expand={@static.can_expand}
-                  row_expanded_slot={@row_expanded}
-                  target={@target}/>
+            <.table_body
+              rows={@rows}
+              conditional_row_class={@static.conditional_row_class || fn _ -> "" end}
+              can_select={@static.can_select}
+              field_slots={@field_slots}
+              has_row_buttons={@static.has_row_buttons}
+              row_buttons_slot={@static.row_buttons_slot}
+              can_expand={@static.can_expand}
+              row_expanded_slot={@row_expanded}
+              target={@target}/>
 
-                <.table_footer
-                  gettext={@gettext}
-                  page_start_item={@page_start_item}
-                  page_end_item={@page_end_item}
-                  total_results={@total_results}
-                  page={@page}
-                  page_size={@page_size}
-                  target={@target}
-                  has_prev={@has_prev}
-                  has_next={@has_next}/>
-              </table>
-            </div>
-          </div>
+            <.table_footer
+              gettext={@gettext}
+              page_start_item={@page_start_item}
+              page_end_item={@page_end_item}
+              total_results={@total_results}
+              page={@page}
+              page_size={@page_size}
+              target={@target}
+              has_prev={@has_prev}
+              has_next={@has_next}/>
+          </table>
         </div>
       </div>
     </div>
@@ -174,22 +186,14 @@ defmodule DataTable.Theme.Tailwind do
 
   def filter_header(assigns) do
     ~H"""
-    <div class="sm:flex sm:justify-between">
-      <div class="flex items-center">
-        <.filters_form
-          target={@target}
-          gettext={@gettext}
-          filters_form={@filters_form}
-          filter_column_order={@filter_column_order}
-          filter_columns={@filter_columns}
-          filters_fields={@filters_fields}/>
-      </div>
-
-      <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-        <%= if assigns[:top_right_slot] do %>
-          <%= render_slot(@top_right_slot) %>
-        <% end %>
-      </div>
+    <div class="flex items-center">
+      <.filters_form
+        target={@target}
+        gettext={@gettext}
+        filters_form={@filters_form}
+        filter_column_order={@filter_column_order}
+        filter_columns={@filter_columns}
+        filters_fields={@filters_fields}/>
     </div>
     """
   end

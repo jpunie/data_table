@@ -16,6 +16,8 @@ defmodule DataTable.Theme.Basic do
     ~H"""
     <div>
       <div class="header">
+        <h3 :if={@static.title}><%= @static.title %></h3>
+        <p :if={@static.subtitle}><%= @static.subtitle %></p>
       </div>
       <table>
         <thead>
@@ -122,9 +124,9 @@ defmodule DataTable.Theme.Basic do
     """
   end
 
-  attr :state, :atom
-  attr :on_toggle, :string, default: nil
-  attr :rest, :global
+  attr(:state, :atom)
+  attr(:on_toggle, :string, default: nil)
+  attr(:rest, :global)
 
   def checkbox(assigns) do
     ~H"""
@@ -150,5 +152,4 @@ defmodule DataTable.Theme.Basic do
     </span>
     """
   end
-
 end

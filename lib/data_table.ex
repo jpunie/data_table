@@ -143,7 +143,9 @@ defmodule DataTable do
     """
   )
 
-  attr(:predefined_filters, :any, default: [], required: false,
+  attr(:predefined_filters, :any,
+    default: [],
+    required: false,
     doc: """
     A list of predefined filters that will be applied to the table.
     Each filter should be a map with `field`, `op`, and `value` keys.
@@ -158,14 +160,31 @@ defmodule DataTable do
 
   attr(:gettext, :atom, default: nil, required: false)
 
+  attr(:title, :string,
+    default: nil,
+    doc: """
+    Optional title rendered above the table. The value is rendered as-is, so
+    translate it yourself (e.g. with `gettext/1`) before passing it in.
+    """
+  )
+
+  attr(:subtitle, :string,
+    default: nil,
+    doc: """
+    Optional subtitle rendered below the `title`. Only shown when `title` is
+    also set.
+    """
+  )
+
   attr(:always_columns, :list,
     doc: """
     A list of column ids that will always be loaded.
     """
   )
 
-  attr(:conditional_row_class, :any, doc: "apply conditinal CSS class for all columns with a function")
-
+  attr(:conditional_row_class, :any,
+    doc: "apply conditinal CSS class for all columns with a function"
+  )
 
   slot :col, doc: "One `:col` should be sepecified for each potential column in the table" do
     attr(:name, :string,
@@ -173,9 +192,7 @@ defmodule DataTable do
       doc: "Column name, must be unique"
     )
 
-    attr(:label, :string,
-      doc: "Label used as column header, defaults to attribute `name`"
-    )
+    attr(:label, :string, doc: "Label used as column header, defaults to attribute `name`")
 
     # default: true
     attr(:visible, :boolean, doc: "Default visibility of the column")
@@ -210,8 +227,6 @@ defmodule DataTable do
     attr(:fields, :list, doc: "List of `field`s that will be queried when a row is expanded")
   end
 
-  slot(:top_right, doc: "Markup in the top right corner of the table")
-
   slot :row_buttons, doc: "Markup in the rightmost side of each row in the table" do
     attr(:fields, :list, doc: "List of `field`s that will be queried when this field is visible")
   end
@@ -219,6 +234,9 @@ defmodule DataTable do
   slot :selection_action do
     attr(:label, :string, required: true)
     attr(:handle_action, :any, required: true)
+  end
+
+  slot :top_right, doc: "Markup in the top right corner of the table" do
   end
 
   @doc """

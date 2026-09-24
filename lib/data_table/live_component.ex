@@ -141,6 +141,8 @@ defmodule DataTable.LiveComponent do
       theme: comp_assigns.theme,
       dropdown_open: false,
       source: source,
+      title: comp_assigns[:title],
+      subtitle: comp_assigns[:subtitle],
       conditional_row_class: comp_assigns[:conditional_row_class],
       predefined_filters: comp_assigns[:predefined_filters] || [],
       # Selection
