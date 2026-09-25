@@ -279,8 +279,8 @@ defmodule DataTable.Theme.Tailwind do
 
           <td :if={@can_expand} class={[row_class, "cursor-pointer !border-0", conditional_row_class]} phx-click={JS.push("toggle-expanded", page_loading: true)} phx-target={@target} phx-value-data-id={row.id}>
             <% class = if @can_select, do: "ml-5", else: "ml-3" %>
-            <Heroicons.chevron_up :if={row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
-            <Heroicons.chevron_down :if={not row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
+            <Heroicons.chevron_down :if={row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
+            <Heroicons.chevron_right :if={not row.expanded} mini={true} class={"h-5 w-5 " <> class}/>
           </td>
 
           <td
