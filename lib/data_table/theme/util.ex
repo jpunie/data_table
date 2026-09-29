@@ -3,7 +3,7 @@ defmodule DataTable.Theme.Util do
   Utilities which are useful for building your own theme.
   """
 
-  import Phoenix.Component
+  use Phoenix.Component
 
   def generate_pages(page, page_size, total_results, with_ellipsis \\ false)
 
@@ -77,6 +77,41 @@ defmodule DataTable.Theme.Util do
           </span>
       <% end %>
     <% end %>
+    """
+  end
+
+  @doc """
+  The fixed set of selectable page sizes. `:all` means no pagination limit.
+  """
+  def page_size_options, do: [10, 25, 50, 100, :all]
+
+  def page_size_param(:all), do: "all"
+  def page_size_param(page_size) when is_integer(page_size), do: Integer.to_string(page_size)
+
+  def page_size_label(:all, gettext), do: DataTable.Gettext.gettext(gettext, "All")
+
+  def page_size_label(page_size, _gettext) when is_integer(page_size),
+    do: Integer.to_string(page_size)
+
+  attr(:page_size, :any, doc: "Currently selected page size, `nil` represents `:all`")
+  attr(:gettext, :any)
+  attr(:target, :any)
+  attr(:class, :string, default: nil)
+
+  def render_page_size_select(assigns) do
+    ~H"""
+    <.form phx-target={@target} phx-change="change-page-size">
+    <select
+      name="page_size"
+      class={@class}>
+      <option
+        :for={opt <- page_size_options()}
+        value={page_size_param(opt)}
+        selected={opt == @page_size}>
+        <%= page_size_label(opt, @gettext) %>
+      </option>
+    </select>
+    </.form>
     """
   end
 end

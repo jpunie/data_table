@@ -100,6 +100,11 @@ defmodule DataTable.Theme.Basic do
                 results
               </div>
 
+              <div class="pagination-size">
+                Rows per page
+                <Util.render_page_size_select page_size={@page_size} gettext={@gettext} target={@target}/>
+              </div>
+
               <nav class="pagination-buttons">
                 <% pages = Util.generate_pages(@page, @page_size, @total_results) %>
 

@@ -312,7 +312,7 @@ defmodule DataTable.Theme.Tailwind do
       <tr class="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
         <td colspan="20" class="py-2 px-4">
           <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-            <div>
+            <div class="flex items-center gap-4">
               <p class="text-sm ">
                 <%= DataTable.Gettext.gettext(@gettext, "Showing") %>
                 <span :if={@total_results == 0} class="font-medium">0</span>
@@ -322,9 +322,20 @@ defmodule DataTable.Theme.Tailwind do
                 <%= DataTable.Gettext.gettext(@gettext, "of") %>
                 <span class="font-medium"><%= @total_results %></span>
               </p>
+
+              <div class="flex items-center gap-2 normal-case">
+                <label class="text-sm text-gray-500 dark:text-gray-400">
+                  <%= DataTable.Gettext.gettext(@gettext, "Rows per page") %>
+                </label>
+                <Util.render_page_size_select
+                  page_size={@page_size}
+                  gettext={@gettext}
+                  target={@target}
+                  class="block py-1 pl-2 pr-8 text-sm rounded-lg cursor-pointer border-gray-300 focus:border-primary-500 focus:ring-primary-500 focus:outline-none dark:border-gray-600 dark:focus:border-primary-500 dark:bg-gray-800 dark:text-gray-300"/>
+              </div>
             </div>
             <div>
-              <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <nav :if={@page_size != nil} class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                 <a :if={@has_prev} phx-click="change-page" phx-target={@target} phx-value-page={@page - 1} class="inline-flex items-center justify-center rounded-l-md leading-5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-400">
                   <span class="sr-only">Previous</span>
                   <Heroicons.chevron_left mini={true} class="h-5 w-5"/>

@@ -39,11 +39,13 @@ defmodule DataTable.LiveComponent do
         }
       end)
 
+    page_size = socket.assigns.page_size
+
     %DataTable.Source.Query{
       filters: filters,
       sort: socket.assigns.sort,
-      offset: socket.assigns.page * socket.assigns.page_size,
-      limit: socket.assigns.page_size,
+      offset: if(page_size, do: socket.assigns.page * page_size, else: 0),
+      limit: page_size,
       fields: columns
 
       # shown_fields: socket.assigns.shown_fields,
@@ -343,7 +345,20 @@ defmodule DataTable.LiveComponent do
     page_idx = assigns.page
     page_size = assigns.page_size
     total_results = assigns.total_results
-    max_page = div(total_results + (page_size - 1), page_size) - 1
+
+    # A `nil` page_size means "show all rows" on a single page.
+    {max_page, page_start_item, page_end_item} =
+      if page_size do
+        max_page = div(total_results + (page_size - 1), page_size) - 1
+
+        {
+          max_page,
+          min(page_size * page_idx, total_results),
+          min(page_size * page_idx + page_size, total_results)
+        }
+      else
+        {0, 0, total_results}
+      end
 
     assign(socket, %{
       # Data
@@ -369,8 +384,8 @@ defmodule DataTable.LiveComponent do
         ),
 
       # Pagination
-      page_start_item: min(page_size * page_idx, total_results),
-      page_end_item: min(page_size * page_idx + page_size, total_results),
+      page_start_item: page_start_item,
+      page_end_item: page_end_item,
       total_results: total_results,
       page_max: max_page,
       has_prev: page_idx > 0,
@@ -441,7 +456,8 @@ defmodule DataTable.LiveComponent do
     socket = assign(socket, copy_assigns)
 
     # Update nav state if present
-    new_nav = assigns[:nav]
+    new_nav = assigns[:nav] |> resolve_page_size(socket)
+
     dispatched_nav = socket.assigns.dispatched_nav
     # Nav state is only updated if it has changed since the last dispatch.
     # This prevents a secondary DOM update after the nav state makes the round
@@ -472,6 +488,14 @@ defmodule DataTable.LiveComponent do
     socket = assign_query_render_data(socket)
 
     {:ok, socket}
+  end
+
+  defp resolve_page_size(nav, socket) do
+    if :page_size in nav.set and is_nil(nav.page_size) do
+      %{nav | page_size: socket.assigns.page_size}
+    else
+      nav
+    end
   end
 
   def field_by_str_id(str_id, socket) do
@@ -578,6 +602,19 @@ defmodule DataTable.LiveComponent do
     socket =
       socket
       |> put_page(page)
+      |> assign_base_render_data()
+      |> do_query()
+      |> assign_query_render_data()
+      |> dispatch_handle_nav()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("change-page-size", %{"page_size" => page_size}, socket) do
+    socket =
+      socket
+      |> put_page_size(page_size)
+      |> put_page(0)
       |> assign_base_render_data()
       |> do_query()
       |> assign_query_render_data()
@@ -705,7 +742,8 @@ defmodule DataTable.LiveComponent do
           {field, op, value || ""}
         end),
       sort: socket.assigns.sort,
-      page: socket.assigns.page + 1
+      page: socket.assigns.page + 1,
+      page_size: socket.assigns.page_size
     }
   end
 
@@ -738,6 +776,13 @@ defmodule DataTable.LiveComponent do
     socket =
       if MapSet.member?(nav.set, :page) do
         assign(socket, :page, max(nav.page - 1, 0))
+      else
+        socket
+      end
+
+    socket =
+      if MapSet.member?(nav.set, :page_size) do
+        assign(socket, :page_size, nav.page_size)
       else
         socket
       end
@@ -791,5 +836,12 @@ defmodule DataTable.LiveComponent do
 
   def put_page(state, page) when is_integer(page) do
     assign(state, :page, page)
+  end
+
+  def put_page_size(state, "all"), do: assign(state, :page_size, nil)
+
+  def put_page_size(state, page_size) when is_binary(page_size) do
+    {page_size, ""} = Integer.parse(page_size)
+    assign(state, :page_size, page_size)
   end
 end

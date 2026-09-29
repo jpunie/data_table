@@ -75,10 +75,11 @@ defmodule DataTable.NavState do
 
   @type t :: %__MODULE__{}
 
-  defstruct set: MapSet.new([:filters, :sort, :page]),
+  defstruct set: MapSet.new([:filters, :sort, :page, :page_size]),
             filters: [],
             sort: nil,
-            page: 0
+            page: 0,
+            page_size: nil
 
   @type kv :: [{key :: String.t(), value :: String.t()}]
 
@@ -97,6 +98,13 @@ defmodule DataTable.NavState do
         [{"page", nav_state.page}]
       end
 
+    page_size_params =
+      if is_nil(nav_state.page_size) do
+        []
+      else
+        [{"page_size", nav_state.page_size}]
+      end
+
     sort_params =
       case nav_state.sort do
         nil -> []
@@ -107,7 +115,8 @@ defmodule DataTable.NavState do
     Enum.concat([
       page_params,
       sort_params,
-      filter_params
+      filter_params,
+      page_size_params
     ])
   end
 
@@ -144,6 +153,16 @@ defmodule DataTable.NavState do
               _ -> []
             end
 
+          {"page_size", _} ->
+            if v == "all" do
+              [{:page_size, :all}]
+            else
+              case Integer.parse(v) do
+                {page_size, ""} -> [{:page_size, page_size}]
+                _ -> []
+              end
+            end
+
           _ ->
             []
         end
@@ -152,6 +171,9 @@ defmodule DataTable.NavState do
     Enum.reduce(components, nav_state, fn
       {:page, page}, s ->
         %{s | page: page}
+
+      {:page_size, page_size}, s ->
+        %{s | page_size: page_size}
 
       {:sort, sort}, s ->
         %{s | sort: sort}
@@ -169,7 +191,12 @@ defmodule DataTable.NavState do
         str -> str
       end
 
-    query = Enum.to_list(URI.query_decoder(query_string || ""))
+    query =
+      (query_string ||
+         "")
+      |> URI.query_decoder()
+      |> Enum.to_list()
+
     decode(nav_state, query)
   end
 end
