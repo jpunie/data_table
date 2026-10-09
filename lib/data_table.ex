@@ -131,6 +131,21 @@ defmodule DataTable do
     """
   )
 
+  attr(:handle_row_expanded, :any,
+    doc: """
+    A 1-arity function called when a row is expanded or collapsed. It receives
+    `%{id: id, row: row_data, expanded: boolean}` and runs in the LiveView process, so
+    it can notify the LiveView to load extra data asynchronously:
+
+    ```elixir
+    handle_row_expanded={fn %{id: id, expanded: true} -> send(self(), {:load_details, id}); _ -> :ok end}
+    ```
+
+    The LiveView can then assign the loaded data (e.g. using `assign_async/3`) and render
+    it from the `:row_expanded` slot, which re-renders when the LiveView's assigns change.
+    """
+  )
+
   attr(:page_size, :integer,
     default: 10,
     doc: """

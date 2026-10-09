@@ -439,6 +439,7 @@ defmodule DataTable.LiveComponent do
           page: 0,
           page_size: assigns[:page_size],
           handle_nav: assigns[:handle_nav],
+          handle_row_expanded: assigns[:handle_row_expanded],
           expanded: %{},
           shown_fields: MapSet.new(static.default_shown_fields),
           selection: {:include, %{}},
@@ -588,12 +589,16 @@ defmodule DataTable.LiveComponent do
         Map.put(socket.assigns.expanded, data_id, true)
       end
 
+    now_expanded = Map.has_key?(expanded, data_id)
+
     socket =
       socket
       |> assign(:expanded, expanded)
       |> assign_base_render_data()
       |> do_query()
       |> assign_query_render_data()
+
+    dispatch_row_expanded(socket, data_id, now_expanded)
 
     {:noreply, socket}
   end
@@ -788,6 +793,22 @@ defmodule DataTable.LiveComponent do
       end
 
     socket
+  end
+
+  defp dispatch_row_expanded(socket, data_id, expanded?) do
+    case socket.assigns.handle_row_expanded do
+      nil ->
+        :ok
+
+      handler ->
+        row = Enum.find(socket.assigns.rows, &("#{&1.id}" == data_id))
+
+        handler.(%{
+          id: if(row, do: row.id, else: data_id),
+          row: if(row, do: row.data),
+          expanded: expanded?
+        })
+    end
   end
 
   def dispatch_handle_nav(socket) do
