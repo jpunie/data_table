@@ -472,7 +472,13 @@ defmodule DataTable.LiveComponent do
       end
 
     copy_assigns =
-      Map.take(assigns, [:row_buttons, :row_expanded, :top_right, :handle_preferences])
+      Map.take(assigns, [
+        :row_buttons,
+        :row_expanded,
+        :top_right,
+        :handle_preferences,
+        :row_expansion_mode
+      ])
 
     socket = assign(socket, copy_assigns)
 
@@ -649,11 +655,24 @@ defmodule DataTable.LiveComponent do
   end
 
   def handle_event("toggle-expanded", %{"data-id" => data_id}, socket) do
+    currently_expanded? = Map.has_key?(socket.assigns.expanded, data_id)
+
     expanded =
-      if Map.has_key?(socket.assigns.expanded, data_id) do
+      if currently_expanded? do
         Map.delete(socket.assigns.expanded, data_id)
       else
-        Map.put(socket.assigns.expanded, data_id, true)
+        if socket.assigns.row_expansion_mode == :exclusive do
+          %{data_id => true}
+        else
+          Map.put(socket.assigns.expanded, data_id, true)
+        end
+      end
+
+    closed_ids =
+      if socket.assigns.row_expansion_mode == :exclusive and not currently_expanded? do
+        Map.keys(socket.assigns.expanded)
+      else
+        []
       end
 
     now_expanded = Map.has_key?(expanded, data_id)
@@ -665,6 +684,7 @@ defmodule DataTable.LiveComponent do
       |> do_query()
       |> assign_query_render_data()
 
+    Enum.each(closed_ids, &dispatch_row_expanded(socket, &1, false))
     dispatch_row_expanded(socket, data_id, now_expanded)
 
     {:noreply, socket}

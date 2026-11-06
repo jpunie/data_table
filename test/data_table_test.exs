@@ -15,15 +15,38 @@ defmodule DataTableTest do
     assert not has_element?(view, "tbody > tr.expanded-row-content")
 
     # Expand row 3
-    assert render(element(view, "tbody > tr:nth-child(3) > td.expansion > span")) == "<span>v</span>"
-    render_click(element(view, "tbody > tr:nth-child(3) > td.expansion"))
+    assert render(element(view, ~s(tbody > tr > td.expansion[phx-value-data-id="2"] > span))) ==
+             "<span>v</span>"
+
+    render_click(element(view, ~s(tbody > tr > td.expansion[phx-value-data-id="2"])))
 
     assert not has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 1")
     assert has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 2")
 
+    # Normal expansion allows more than one row to stay open.
+    render_click(element(view, ~s(tbody > tr > td.expansion[phx-value-data-id="1"])))
+    assert has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 1")
+    assert has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 2")
+
     # Collapse row 3
-    render_click(element(view, "tbody > tr:nth-child(3) > td.expansion"))
+    render_click(element(view, ~s(tbody > tr > td.expansion[phx-value-data-id="2"])))
+    assert not has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 2")
+    assert has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 1")
+
+    render_click(element(view, ~s(tbody > tr > td.expansion[phx-value-data-id="1"])))
     assert not has_element?(view, "tbody > tr.expanded-row-content")
+  end
+
+  test "exclusive row expansion closes other expanded rows", %{conn: conn} do
+    {:ok, view, _html} =
+      live_isolated(conn, DataTable.TestLive, session: %{"row_expansion_mode" => :exclusive})
+
+    render_click(element(view, ~s(tbody > tr > td.expansion[phx-value-data-id="1"])))
+    assert has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 1")
+
+    render_click(element(view, ~s(tbody > tr > td.expansion[phx-value-data-id="2"])))
+    assert not has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 1")
+    assert has_element?(view, "tbody > tr.expanded-row-content", "Row Expanded 2")
   end
 
   test "pagination buttons work", %{conn: conn} do

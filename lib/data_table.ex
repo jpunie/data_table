@@ -146,6 +146,16 @@ defmodule DataTable do
     """
   )
 
+  attr(:row_expansion_mode, :atom,
+    default: :normal,
+    values: [:normal, :exclusive],
+    doc: """
+    Controls whether multiple rows can be expanded at once. `:normal` allows
+    multiple expanded rows; `:exclusive` closes any other expanded row when
+    a row is expanded.
+    """
+  )
+
   attr(:page_size, :integer,
     default: 10,
     doc: """

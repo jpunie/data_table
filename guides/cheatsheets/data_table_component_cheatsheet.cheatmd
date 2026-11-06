@@ -50,6 +50,10 @@ Columns are visible by default. Default visibility can be changed with the `visi
 When added, rows will get an expand button.
 Can only be declared once.
 
+Set `row_expansion_mode={:exclusive}` on `<DataTable.live_data_table>` to close
+any other expanded row when a row is expanded. The default, `:normal`, allows
+multiple rows to stay expanded.
+
 #### Row buttons
 ```elixir
 <:row_buttons fields={[:id]} :let={row}>
