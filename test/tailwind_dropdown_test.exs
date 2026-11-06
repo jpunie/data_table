@@ -66,7 +66,7 @@ defmodule DataTable.TailwindDropdownTest do
 
     render_click(element(view, "button[phx-value-dropdown_id='dropdown_tailwind-table']"))
 
-    view |> with_target("#tailwind-table") |> render_hook("hide-dropdown")
+    view |> with_target("#tailwind-table-preferences") |> render_hook("hide-dropdown")
 
     assert has_element?(view, "#dropdown_tailwind-table[style='display: none;']")
   end

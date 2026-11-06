@@ -3,11 +3,22 @@ defmodule DataTable.LiveComponent do
   use Phoenix.LiveComponent
 
   alias __MODULE__.Filters
+  require Logger
 
   defp id_to_string(id) when is_binary(id), do: id
 
   def render(assigns) do
-    assigns.static.theme.root(assigns)
+    ~H"""
+    <div
+      id={"#{@id}-preferences"}
+      phx-hook={if @preference_storage == :local_storage, do: "DataTablePreferences"}
+      phx-target={@myself}
+      data-preference-key={@preference_key}
+      data-table-id={@id}
+    >
+      <%= @static.theme.root(assigns) %>
+    </div>
+    """
   end
 
   def make_query_params(socket) do
@@ -438,7 +449,14 @@ defmodule DataTable.LiveComponent do
           sort: nil,
           page: 0,
           page_size: assigns[:page_size],
+          preferred_page_size: assigns[:page_size],
           handle_nav: assigns[:handle_nav],
+          preference_storage: assigns[:preference_storage],
+          preference_key: assigns[:preference_key] || "data_table:#{assigns.id}",
+          handle_preferences: assigns[:handle_preferences],
+          incoming_preferences: nil,
+          preference_dirty: false,
+          nav_page_size_explicit: false,
           handle_row_expanded: assigns[:handle_row_expanded],
           expanded: %{},
           shown_fields: MapSet.new(static.default_shown_fields),
@@ -453,11 +471,14 @@ defmodule DataTable.LiveComponent do
         socket
       end
 
-    copy_assigns = Map.take(assigns, [:row_buttons, :row_expanded, :top_right])
+    copy_assigns =
+      Map.take(assigns, [:row_buttons, :row_expanded, :top_right, :handle_preferences])
+
     socket = assign(socket, copy_assigns)
 
     # Update nav state if present
     new_nav = assigns[:nav] |> resolve_page_size(socket)
+    socket = assign(socket, :nav_page_size_explicit, explicit_nav_page_size?(assigns[:nav]))
 
     dispatched_nav = socket.assigns.dispatched_nav
     # Nav state is only updated if it has changed since the last dispatch.
@@ -467,6 +488,18 @@ defmodule DataTable.LiveComponent do
       if new_nav != nil and new_nav != dispatched_nav do
         socket
         |> nav_to_state(new_nav)
+        |> do_query()
+      else
+        socket
+      end
+
+    socket =
+      if socket.assigns.preference_storage == :parent and
+           assigns[:preferences] != socket.assigns.incoming_preferences do
+        socket
+        |> assign(:incoming_preferences, assigns[:preferences])
+        |> apply_preferences!(assigns[:preferences])
+        |> assign_base_render_data()
         |> do_query()
       else
         socket
@@ -492,12 +525,23 @@ defmodule DataTable.LiveComponent do
   end
 
   defp resolve_page_size(nav, socket) do
-    if :page_size in nav.set and is_nil(nav.page_size) do
-      %{nav | page_size: socket.assigns.page_size}
-    else
-      nav
+    cond do
+      is_nil(nav) ->
+        nil
+
+      nav.page_size == :all ->
+        %{nav | page_size: nil}
+
+      :page_size in nav.set and is_nil(nav.page_size) ->
+        %{nav | page_size: socket.assigns.page_size}
+
+      true ->
+        nav
     end
   end
+
+  defp explicit_nav_page_size?(nil), do: false
+  defp explicit_nav_page_size?(nav), do: :page_size in nav.set and not is_nil(nav.page_size)
 
   def field_by_str_id(str_id, socket) do
     field_by_str_id(
@@ -510,6 +554,28 @@ defmodule DataTable.LiveComponent do
   def field_by_str_id(str_id, field_id_by_str_id, field_by_id) do
     id = Map.fetch!(field_id_by_str_id, str_id)
     Map.fetch!(field_by_id, id)
+  end
+
+  def handle_event("restore-preferences", preferences, socket) do
+    if socket.assigns.preference_storage == :local_storage and not socket.assigns.preference_dirty do
+      case validate_preferences(preferences, socket.assigns.static) do
+        {:ok, preferences} ->
+          socket =
+            socket
+            |> apply_valid_preferences(preferences)
+            |> assign_base_render_data()
+            |> do_query()
+            |> assign_query_render_data()
+
+          {:noreply, socket}
+
+        {:error, reason} ->
+          Logger.warning("DataTable #{socket.assigns.id}: invalid browser preferences: #{reason}")
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event(
@@ -562,6 +628,7 @@ defmodule DataTable.LiveComponent do
       |> assign_base_render_data()
       |> do_query()
       |> assign_query_render_data()
+      |> dispatch_preferences()
 
     {:noreply, socket}
   end
@@ -619,11 +686,13 @@ defmodule DataTable.LiveComponent do
     socket =
       socket
       |> put_page_size(page_size)
+      |> then(&assign(&1, :preferred_page_size, &1.assigns.page_size))
       |> put_page(0)
       |> assign_base_render_data()
       |> do_query()
       |> assign_query_render_data()
       |> dispatch_handle_nav()
+      |> dispatch_preferences()
 
     {:noreply, socket}
   end
@@ -820,6 +889,105 @@ defmodule DataTable.LiveComponent do
     end
 
     assign(socket, :dispatched_nav, new_nav)
+  end
+
+  defp apply_preferences!(socket, nil), do: socket
+
+  defp apply_preferences!(socket, preferences) do
+    case validate_preferences(preferences, socket.assigns.static) do
+      {:ok, valid} -> apply_valid_preferences(socket, valid)
+      {:error, reason} -> raise ArgumentError, "invalid DataTable preferences: #{reason}"
+    end
+  end
+
+  defp validate_preferences(preferences, static) when is_map(preferences) do
+    page_size = Map.get(preferences, :page_size, Map.get(preferences, "page_size", :missing))
+
+    columns =
+      Map.get(preferences, :visible_columns, Map.get(preferences, "visible_columns", :missing))
+
+    cond do
+      page_size != :missing and
+          not (is_nil(page_size) or (is_integer(page_size) and page_size > 0)) ->
+        {:error, "page_size must be a positive integer or nil"}
+
+      columns != :missing and not (is_list(columns) and Enum.all?(columns, &is_binary/1)) ->
+        {:error, "visible_columns must be a list of column id strings"}
+
+      true ->
+        known_columns = Map.keys(static.field_id_by_str_id)
+
+        if columns != :missing and Enum.any?(columns, &(&1 not in known_columns)) do
+          Logger.warning("DataTable preferences contain unknown column ids; ignoring them")
+        end
+
+        {:ok, %{page_size: page_size, visible_columns: columns}}
+    end
+  end
+
+  defp validate_preferences(_, _), do: {:error, "preferences must be a map"}
+
+  defp apply_valid_preferences(socket, preferences) do
+    socket =
+      if preferences.page_size != :missing do
+        assign(socket, :preferred_page_size, preferences.page_size)
+      else
+        socket
+      end
+
+    socket =
+      if preferences.page_size != :missing and not socket.assigns.nav_page_size_explicit do
+        assign(socket, :page_size, preferences.page_size)
+      else
+        socket
+      end
+
+    if preferences.visible_columns == :missing do
+      socket
+    else
+      fields =
+        preferences.visible_columns
+        |> Enum.filter(&Map.has_key?(socket.assigns.static.field_id_by_str_id, &1))
+        |> Enum.map(&Map.fetch!(socket.assigns.static.field_id_by_str_id, &1))
+        |> MapSet.new()
+
+      assign(socket, :shown_fields, fields)
+    end
+  end
+
+  defp dispatch_preferences(socket) do
+    preferences = %{
+      page_size: socket.assigns.preferred_page_size,
+      visible_columns:
+        socket.assigns.static.fields
+        |> Enum.filter(&MapSet.member?(socket.assigns.shown_fields, &1.id))
+        |> Enum.map(&id_to_string(&1.id))
+    }
+
+    socket = assign(socket, :preference_dirty, true)
+
+    case socket.assigns.preference_storage do
+      :local_storage ->
+        push_event(socket, "data-table:preferences", %{
+          id: socket.assigns.id,
+          preferences: preferences
+        })
+
+      :parent ->
+        case socket.assigns.handle_preferences do
+          nil ->
+            raise ArgumentError,
+                  "handle_preferences is required when preference_storage is :parent"
+
+          handler ->
+            handler.(Map.put(preferences, :table_id, socket.assigns.id))
+        end
+
+        socket
+
+      :none ->
+        socket
+    end
   end
 
   def add_filter_defaults(changeset, assigns) do

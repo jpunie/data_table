@@ -152,6 +152,30 @@ defmodule DataTable do
     """
   )
 
+  attr(:preference_storage, :atom,
+    default: :local_storage,
+    values: [:local_storage, :parent, :none],
+    doc:
+      "Where preference changes are persisted. Browser storage requires the DataTablePreferences hook."
+  )
+
+  attr(:preference_key, :string,
+    default: nil,
+    doc: "Browser storage key; defaults to a key derived from the table id."
+  )
+
+  attr(:preferences, :map,
+    default: nil,
+    doc:
+      "Initial or updated parent-managed preferences: %{page_size: positive_integer | nil, visible_columns: [column_id]}."
+  )
+
+  attr(:handle_preferences, :any,
+    default: nil,
+    doc:
+      "Callback invoked with %{table_id: id, page_size: size, visible_columns: columns} when a user changes a preference."
+  )
+
   attr(:filter_enabled, :boolean,
     default: true,
     doc: """

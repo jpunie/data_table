@@ -11,6 +11,8 @@ defmodule DataTable.Theme.Util do
     [{:page, 0, true}]
   end
 
+  def generate_pages(_page, nil, _total_results, _with_ellipsis), do: [{:page, 0, true}]
+
   def generate_pages(page, page_size, total_results, with_ellipsis) do
     max_page = div(total_results + (page_size - 1), page_size) - 1
 
@@ -107,7 +109,7 @@ defmodule DataTable.Theme.Util do
       <option
         :for={opt <- page_size_options()}
         value={page_size_param(opt)}
-        selected={opt == @page_size}>
+        selected={opt == @page_size or (opt == :all and is_nil(@page_size))}>
         <%= page_size_label(opt, @gettext) %>
       </option>
     </select>

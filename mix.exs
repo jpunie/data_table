@@ -26,6 +26,7 @@ defmodule DataTable.MixProject do
     [
       description: "Flexible data table component for LiveView",
       licenses: ["MIT"],
+      files: ~w(lib assets priv .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       links: %{
         "GitHub" => "https://github.com/hansihe/data_table"
       }
