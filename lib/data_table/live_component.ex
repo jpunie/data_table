@@ -112,8 +112,8 @@ defmodule DataTable.LiveComponent do
     fields_by_str_id =
       fields
       |> Enum.map(fn
-        %{id: id, name: name} when is_atom(id) -> {Atom.to_string(id), name}
-        %{id: id, name: name} when is_binary(id) -> {id, name}
+        %{id: id} when is_atom(id) -> {Atom.to_string(id), id}
+        %{id: id} when is_binary(id) -> {id, id}
       end)
       |> Enum.into(%{})
 

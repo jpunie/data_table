@@ -21,6 +21,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
   attr(:options_container_id, :string)
   attr(:label, :string, default: nil, doc: "labels your dropdown option")
   attr(:class, :any, default: nil, doc: "any extra CSS class for the parent container")
+  attr(:trigger_wrapper_class, :any, default: nil)
 
   attr(:menu_items_wrapper_class, :any,
     default: nil,
@@ -58,12 +59,12 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
     <div
       {@rest}
       {js_attributes(@target, "container", @js_lib, @options_container_id)}
-      class={[@class, "relative inline-block text-left z-index-50"]}
+      class={[@class, "relative inline-block text-left"]}
     >
-      <div>
+      <div class={@trigger_wrapper_class}>
         <button
           type="button"
-          class={trigger_button_classes(@label, @trigger_element)}
+          class={["pointer-events-auto", trigger_button_classes(@label, @trigger_element)]}
           aria-haspopup="true"
           phx-click="toggle-dropdown"
           phx-target={@target}
@@ -90,7 +91,7 @@ defmodule DataTable.Theme.Tailwind.Dropdown do
         class={[
           placement_class(@placement),
           @menu_items_wrapper_class,
-          "fixed z-30 w-56 mt-2 bg-white rounded-md shadow-lg dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none"
+          "absolute top-full z-30 w-56 mt-2 pointer-events-auto bg-white rounded-md shadow-lg dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none"
         ]}
         role="menu"
         id={@options_container_id}

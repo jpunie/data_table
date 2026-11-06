@@ -99,7 +99,7 @@ defmodule DataTable.Theme.Tailwind do
 
   def root(assigns) do
     ~H"""
-    <div id={@id} class="bg-white dark:bg-gray-900 rounded-xl shadow-xs border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div id={@id} class="bg-white dark:bg-gray-900 rounded-xl shadow-xs border border-gray-200 dark:border-gray-800">
       <div :if={@static.title || @top_right != []} class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start gap-4">
         <div :if={@static.title}>
           <h3 class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
@@ -142,8 +142,35 @@ defmodule DataTable.Theme.Tailwind do
           </div>
       </div>
 
-      <div class="flex flex-col">
-        <div class="overflow-x-auto">
+      <div class="relative">
+        <div class="absolute inset-x-0 top-0 z-30 pr-4 sm:pr-6 pointer-events-none">
+          <Dropdown.dropdown
+            target={@target}
+            options_container_id={"dropdown_#{@id}"}
+            dropdown_open={@static.dropdown_open}
+            class="w-full"
+            trigger_wrapper_class="flex justify-end py-3.5"
+            menu_items_wrapper_class="max-w-full"
+          >
+            <:trigger_element>
+              <Heroicons.list_bullet mini class="h-4 w-4"/>
+            </:trigger_element>
+
+            <div class="p-4 rounded border-gray-300 dark:border-gray-700 space-y-2">
+              <div :for={{name, id, checked} <- @togglable_fields} class="relative flex items-start cursor-pointer" phx-click="toggle-field" phx-target={@target} phx-value-field={id}>
+                <div class="flex h-5 w-5 items-center">
+                  <div class="border border-gray-300 dark:border-gray-700 rounded relative w-[18px] h-[18px]">
+                    <Heroicons.check :if={checked} solid={true} class="w-4"/>
+                  </div>
+                </div>
+                <div class="ml-2 text-sm">
+                  <label for="comments" class="font-medium"><%= name %></label>
+                </div>
+              </div>
+            </div>
+          </Dropdown.dropdown>
+        </div>
+        <div class="overflow-x-auto rounded-b-xl">
           <table class="min-w-full divide-y divide-gray-300 bg-white dark:divide-gray-900 dark:bg-gray-800">
             <.table_header
               can_select={@static.can_select}
@@ -151,10 +178,7 @@ defmodule DataTable.Theme.Tailwind do
               target={@target}
               can_expand={@static.can_expand}
               row_expanded_slot={@row_expanded}
-              header_fields={@header_fields}
-              togglable_fields={@togglable_fields}
-              table_container_id={@id}
-              dropdown_open={@static.dropdown_open}/>
+              header_fields={@header_fields}/>
 
             <.table_body
               rows={@rows}
@@ -238,28 +262,9 @@ defmodule DataTable.Theme.Tailwind do
           </div>
         </th>
 
-        <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 w-0 whitespace-nowrap !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
+        <th scope="col" class="sticky right-0 z-10 py-3.5 pl-3 pr-4 sm:pr-6 w-0 whitespace-nowrap !border-0 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
           <span class="sr-only">Buttons</span>
-          <div class="flex justify-end content-center">
-            <Dropdown.dropdown target={@target} options_container_id={"dropdown_#{@table_container_id}"} dropdown_open={@dropdown_open}>
-              <:trigger_element>
-                <Heroicons.list_bullet mini class="h-4 w-4"/>
-              </:trigger_element>
-
-              <div class="p-4 top-4 left-0 rounded border-gray-300 dark:border-gray-700 space-y-2">
-                <div :for={{name, id, checked} <- @togglable_fields} class="relative flex items-start cursor-pointer" phx-click="toggle-field" phx-target={@target} phx-value-field={id}>
-                  <div class="flex h-5 w-5 items-center">
-                    <div class="border border-gray-300 dark:border-gray-700 rounded relative w-[18px] h-[18px]">
-                      <Heroicons.check :if={checked} solid={true} class="w-4"/>
-                    </div>
-                  </div>
-                  <div class="ml-2 text-sm">
-                    <label for="comments" class="font-medium"><%= name %></label>
-                  </div>
-                </div>
-              </div>
-            </Dropdown.dropdown>
-          </div>
+          <span class="block h-4 w-4"></span>
         </th>
       </tr>
     </thead>
